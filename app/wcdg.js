@@ -489,17 +489,9 @@ CDGParser.prototype.parseOne = function(bytes, offset) {
   return new CDGNoopInstruction();
 };
 
-CDGParser.prototype.stringToByteArray = function(data) {
-  var bytes = new Array(data.length);
-  for (var i = 0; i < data.length; ++i) {
-    bytes[i] = data.charCodeAt(i) & 0xFF;
-  }
-  return bytes;
-};
+CDGParser.prototype.parseData = function(bytes) {
+  var instructions = [];
 
-CDGParser.prototype.parseDataString = function(data) {
-  var instructions = new Array();
-  var bytes = this.stringToByteArray(data);
   for (var offset = 0; offset < bytes.length; offset += this.PACKET_SIZE) {
     var instruction = this.parseOne(bytes, offset);
     if (instruction != null) {
@@ -529,23 +521,11 @@ CDGPlayer.prototype.init = function(canvas) {
   this.updater = null;
   this.startTime = 0;
 };
-CDGPlayer.prototype.load = function(url) {
-  $.ajax({
-    url: url,
-    beforeSend: function( xhr ) {
-      xhr.overrideMimeType( 'text/plain; charset=x-user-defined' );
-    },
-    context: this,
-    success: function(data, status, xhr) {
-      var parser = new CDGParser();
-      this.instructions = parser.parseDataString(data);
-      this.pc = 0;
-    },
-    error: function(xhr, status, error) {
-      cdgLog("error loading cdg from url " + url);
-    },
 
-  });
+CDGPlayer.prototype.load = function(data) {
+  var parser = new CDGParser();
+  this.instructions = parser.parseData(data);
+  this.pc = 0;
 };
 
 CDGPlayer.prototype.render = function() {

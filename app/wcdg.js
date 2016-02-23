@@ -44,11 +44,10 @@ CDGContext.prototype.setCLUTEntry = function(index, r, g, b) {
   this.clut[index] = "rgb(" + 17*r + ',' + 17*g + ',' + 17*b + ')';
 };
 
-CDGContext.prototype.renderFrameDebug = function(canvas) {
-
+CDGContext.prototype.renderFrameDebug = function(ctx) {
   /* determine size of a 'pixel' that will fit. */
-  var pw = Math.min(Math.floor(canvas.width / this.WIDTH),
-  Math.floor(canvas.height / this.HEIGHT));
+  var pw = Math.min(Math.floor(ctx.canvas.clientWidth / this.WIDTH),
+  Math.floor(ctx.canvas.clientHeight / this.HEIGHT));
 
   /* canvas is too small */
   if (pw == 0) {
@@ -56,7 +55,6 @@ CDGContext.prototype.renderFrameDebug = function(canvas) {
     return;
   }
 
-  var ctx = canvas.getContext('2d');
   ctx.save();
   for (var x=0; x < this.WIDTH; x++) {
     for (var y=0; y < this.HEIGHT; y++) {
@@ -514,7 +512,7 @@ var CDGPlayer = function(canvas) {
   }
 };
 CDGPlayer.prototype.init = function(canvas) {
-  this.canvas = canvas;
+  this.canvas = canvas.getContext('2d');
   this.context = new CDGContext();
   this.instructions = [];
   this.pc = -1;

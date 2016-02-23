@@ -518,6 +518,7 @@ CDGPlayer.prototype.init = function(canvas) {
   this.pc = -1; // packet counter
   this.frameId = null;
   this.pos = 0; // current position in ms
+  this.lastSyncPos = null; // ms
   this.lastTimestamp = null; // DOMHighResTimeStamp
 };
 
@@ -525,6 +526,8 @@ CDGPlayer.prototype.load = function(data) {
   var parser = new CDGParser();
   this.instructions = parser.parseData(data);
   this.pc = 0;
+  this.pos = 0;
+  this.lastSyncPos = null;
 };
 
 CDGPlayer.prototype.render = function() {
@@ -562,15 +565,25 @@ CDGPlayer.prototype.stop = function() {
   this.frameId = null;
 };
 
+CDGPlayer.prototype.sync = function(ms) {
+  this.lastSyncPos = ms;
+  this.lastTimestamp = performance.now();
+};
+
 CDGPlayer.prototype.update = function(timestamp) {
   if (this.pc === -1) return;
 
   // go ahead and request the next frame
   this.frameId = requestAnimationFrame(this.update.bind(this));
 
-  // determine current position/time
-  this.pos += timestamp - this.lastTimestamp;
-  this.lastTimestamp = timestamp;
+  if (this.lastSyncPos) {
+    // last known audio position + time delta
+    this.pos = this.lastSyncPos + (timestamp - this.lastTimestamp);
+  } else {
+    // time delta only (unsynced)
+    this.pos += timestamp - this.lastTimestamp;
+    this.lastTimestamp = timestamp;
+  }
 
   // determine packet we should be at, based on spec
   // of 4 packets per sector @ 75 sectors per second

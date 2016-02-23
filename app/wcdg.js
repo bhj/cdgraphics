@@ -515,9 +515,10 @@ CDGPlayer.prototype.init = function(canvas) {
   this.canvas = canvas.getContext('2d');
   this.context = new CDGContext();
   this.instructions = [];
-  this.pc = -1;
-  this.updater = null;
-  this.startTime = 0;
+  this.pc = -1; // packet counter
+  this.frameId = null;
+  this.pos = 0; // current position in ms
+  this.lastTimestamp = null; // DOMHighResTimeStamp
 };
 
 CDGPlayer.prototype.load = function(data) {
@@ -538,6 +539,7 @@ CDGPlayer.prototype.step = function() {
   else {
     cdgLog("No more instructions.");
     this.pc = -1;
+    this.stop();
   }
 };
 
@@ -548,35 +550,36 @@ CDGPlayer.prototype.fastForward = function(count) {
   }
 };
 
-CDGPlayer.prototype.rawTicks = function() {
-  return new Date().valueOf();
-};
-
-CDGPlayer.prototype.playerTicks = function() {
-  return this.rawTicks() - this.startTime;
-};
-
 CDGPlayer.prototype.play = function() {
-  this.startTime = this.rawTicks();
-  var thisPlayer = this;
-  this.updater = setInterval(function() {thisPlayer.update();}, 50);
-};
-
-CDGPlayer.prototype.stop = function() {
-  if (this.updater != null) {
-    clearInterval(this.updater);
+  if (!this.frameId) {
+    this.frameId = requestAnimationFrame(this.update.bind(this));
+    this.lastTimestamp = performance.now();
   }
 };
 
-CDGPlayer.prototype.update = function() {
-  if (this.pc >= 0) {
-    var now = this.playerTicks();
-    var pcForNow = 4*Math.floor(3*now/40);
-    var ffAmt = pcForNow - this.pc;
-    if (ffAmt > 0) {
-      this.fastForward(ffAmt);
-      this.render();
-    }
+CDGPlayer.prototype.stop = function() {
+  cancelAnimationFrame(this.frameId);
+  this.frameId = null;
+};
+
+CDGPlayer.prototype.update = function(timestamp) {
+  if (this.pc === -1) return;
+
+  // go ahead and request the next frame
+  this.frameId = requestAnimationFrame(this.update.bind(this));
+
+  // determine current position/time
+  this.pos += timestamp - this.lastTimestamp;
+  this.lastTimestamp = timestamp;
+
+  // determine packet we should be at, based on spec
+  // of 4 packets per sector @ 75 sectors per second
+  var newPc = Math.floor(4 * 75 * (this.pos / 1000));
+
+  var ffAmt = newPc - this.pc;
+  if (ffAmt > 0) {
+    this.fastForward(ffAmt);
+    this.render();
   }
 };
 

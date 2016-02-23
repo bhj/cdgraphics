@@ -601,3 +601,5 @@ CDGPlayer.prototype.update = function() {
     }
   }
 };
+
+module.exports = CDGPlayer;

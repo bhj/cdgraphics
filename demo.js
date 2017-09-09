@@ -32,8 +32,8 @@ fetch(cdgUrl)
   .then(function (response) {
     return response.arrayBuffer()
   }).then(function (buffer) {
-    // convert arrayBuffer to Uint8Array to normal Array
-    cdg.load(Array.from(new Uint8Array(buffer)))
+    // arrayBuffer to Uint8Array
+    cdg.load(new Uint8Array(buffer))
 
     // load and play the audio file, which will fire
     // the "playing" event and play() our CDGraphics

@@ -4,7 +4,7 @@ const cdgUrl = 'YOUR_CDG_FILE.cdg'; // place in ./build folder
 const app = document.getElementById('app');
 const audio = document.createElement('audio');
 const canvas = document.createElement('canvas');
-const CDGPlayer = require('./wcdg');
+const CDGPlayer = require('./index.js');
 const cdg = new CDGPlayer(canvas);
 
 // create <canvas> element

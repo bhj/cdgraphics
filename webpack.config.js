@@ -1,23 +1,12 @@
-const webpack = require('webpack');
-const path = require('path');
+const webpack = require('webpack')
+const path = require('path')
 
-const PATHS = {
-  app: path.join(__dirname, 'app'),
-  build: path.join(__dirname, 'build')
-};
-
-var config = {
-  // Entry accepts a path or an object of entries.
-  // The build chapter contains an example of the latter.
-  entry: PATHS.app,
+module.exports = {
+  entry: path.join(__dirname, 'demo.js'),
   output: {
-    path: PATHS.build,
+    path: path.join(__dirname, 'build'),
     filename: 'bundle.js'
   },
   plugins: [
-    new webpack.ProvidePlugin({
-      'fetch': 'imports?this=>global!exports?global.fetch!whatwg-fetch'
-    })
-  ]};
-
-module.exports = config;
+  ]
+}

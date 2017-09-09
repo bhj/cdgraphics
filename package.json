@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
-  "main": "app/index.js",
   "scripts": {
     "build": "webpack",
     "start": "webpack-dev-server --content-base build",

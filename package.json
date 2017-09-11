@@ -1,15 +1,22 @@
 {
-  "name": "html5_karaoke",
+  "name": "cdgraphics",
   "version": "1.0.0",
-  "description": "",
-  "private": true,
+  "description": "CD Graphics (CD+G) JS/HTML5 player",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/radrootllc/cdgraphics.git"
+  },
   "scripts": {
-    "build": "webpack",
     "start": "webpack-dev-server --content-base build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cdg",
+    "cd+g",
+    "lyrics",
+    "karaoke"
+  ],
+  "author": "Brandon Jones",
   "license": "ISC",
   "devDependencies": {
     "exports-loader": "^0.6.3",

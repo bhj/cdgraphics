@@ -4,7 +4,7 @@
   "description": "CD Graphics (CD+G) JS/HTML5 player",
   "repository": {
     "type": "git",
-    "url": "https://github.com/radrootllc/cdgraphics.git"
+    "url": "https://github.com/RadRootLLC/cdgraphics.git"
   },
   "scripts": {
     "start": "webpack-dev-server --content-base build",

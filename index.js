@@ -69,34 +69,34 @@ CDGContext.prototype.renderFrameDebug = function (ctx) {
   ctx.restore()
 }
 
-CDGContext.prototype.renderFrame = function (canvas) {
-  /* determine size of a 'pixel' that will fit. */
-  var pw = Math.min(Math.floor(canvas.width / this.DISPLAY_WIDTH),
-  Math.floor(canvas.height / this.DISPLAY_HEIGHT))
-
-  /* canvas is too small */
-  if (pw == 0) {
-    /* could indicate this ... */
-    return
-  }
-
-  var canvas_xoff = 0
-  var canvas_yoff = 0
-  var ctx = canvas.getContext('2d')
-  for (var x = 0; x < this.DISPLAY_WIDTH; x++) {
-    for (var y = 0; y < this.DISPLAY_HEIGHT; y++) {
-      var px = x + this.hOffset + this.DISPLAY_BOUNDS[0]
-      var py = y + this.vOffset + this.DISPLAY_BOUNDS[1]
-      var color_index = this.pixels[px + py * this.WIDTH]
-      if (color_index == this.keyColor) {
-        ctx.clearRect(canvas_xoff + x * pw, canvas_yoff + y * pw, pw, pw)
-      } else {
-        ctx.fillStyle = this.clut[color_index]
-        ctx.fillRect(canvas_xoff + x * pw, canvas_yoff + y * pw, pw, pw)
-      }
-    }
-  }
-}
+// CDGContext.prototype.renderFrame = function (canvas) {
+//   /* determine size of a 'pixel' that will fit. */
+//   var pw = Math.min(Math.floor(canvas.width / this.DISPLAY_WIDTH),
+//   Math.floor(canvas.height / this.DISPLAY_HEIGHT))
+//
+//   /* canvas is too small */
+//   if (pw == 0) {
+//     /* could indicate this ... */
+//     return
+//   }
+//
+//   var canvas_xoff = 0
+//   var canvas_yoff = 0
+//   var ctx = canvas.getContext('2d')
+//   for (var x = 0; x < this.DISPLAY_WIDTH; x++) {
+//     for (var y = 0; y < this.DISPLAY_HEIGHT; y++) {
+//       var px = x + this.hOffset + this.DISPLAY_BOUNDS[0]
+//       var py = y + this.vOffset + this.DISPLAY_BOUNDS[1]
+//       var color_index = this.pixels[px + py * this.WIDTH]
+//       if (color_index == this.keyColor) {
+//         ctx.clearRect(canvas_xoff + x * pw, canvas_yoff + y * pw, pw, pw)
+//       } else {
+//         ctx.fillStyle = this.clut[color_index]
+//         ctx.fillRect(canvas_xoff + x * pw, canvas_yoff + y * pw, pw, pw)
+//       }
+//     }
+//   }
+// }
 
 var CDG_NOOP = 0
 var CDG_MEMORY_PRESET = 1

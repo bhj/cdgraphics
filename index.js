@@ -10,7 +10,8 @@ var cdgLog = function (message) {
 *
 ************************************************/
 
-var CDGContext = function () {
+var CDGContext = function (canvas) {
+  this.ctx = canvas.getContext('2d')
   this.init()
 }
 CDGContext.prototype.WIDTH = 300
@@ -43,10 +44,10 @@ CDGContext.prototype.setCLUTEntry = function (index, r, g, b) {
   this.clut[index] = 'rgb(' + 17 * r + ',' + 17 * g + ',' + 17 * b + ')'
 }
 
-CDGContext.prototype.renderFrameDebug = function (ctx) {
+CDGContext.prototype.renderFrameDebug = function () {
   /* determine size of a 'pixel' that will fit. */
-  var pw = Math.min(Math.floor(ctx.canvas.clientWidth / this.WIDTH),
-  Math.floor(ctx.canvas.clientHeight / this.HEIGHT))
+  var pw = Math.min(Math.floor(this.ctx.canvas.clientWidth / this.WIDTH),
+  Math.floor(this.ctx.canvas.clientHeight / this.HEIGHT))
 
   /* canvas is too small */
   if (pw == 0) {
@@ -54,19 +55,19 @@ CDGContext.prototype.renderFrameDebug = function (ctx) {
     return
   }
 
-  ctx.save()
+  this.ctx.save()
   for (var x = 0; x < this.WIDTH; x++) {
     for (var y = 0; y < this.HEIGHT; y++) {
       var color_index = this.pixels[x + y * this.WIDTH]
       if (color_index == this.keyColor) {
-        ctx.clearRect(x * pw, y * pw, pw, pw)
+        this.ctx.clearRect(x * pw, y * pw, pw, pw)
       } else {
-        ctx.fillStyle = this.clut[color_index]
-        ctx.fillRect(x * pw, y * pw, pw, pw)
+        this.ctx.fillStyle = this.clut[color_index]
+        this.ctx.fillRect(x * pw, y * pw, pw, pw)
       }
     }
   }
-  ctx.restore()
+  this.ctx.restore()
 }
 
 // CDGContext.prototype.renderFrame = function (canvas) {
@@ -492,9 +493,8 @@ var CDGPlayer = function (canvas) {
   this.canvas = canvas
   this.init()
 }
-CDGPlayer.prototype.init = function (canvas) {
-  this.canvas = canvas.getContext('2d')
-  this.context = new CDGContext()
+
+CDGPlayer.prototype.init = function () {
   this.instructions = []
   this.pc = -1 // packet counter
   this.frameId = null
@@ -506,13 +506,15 @@ CDGPlayer.prototype.init = function (canvas) {
 CDGPlayer.prototype.load = function (data) {
   var parser = new CDGParser()
   this.instructions = parser.parseData(data)
+  this.context = new CDGContext(this.canvas)
+
   this.pc = 0
   this.pos = 0
   this.lastSyncPos = null
 }
 
 CDGPlayer.prototype.render = function () {
-  this.context.renderFrameDebug(this.canvas)
+  this.context.renderFrameDebug()
 }
 
 CDGPlayer.prototype.step = function () {

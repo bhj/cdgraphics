@@ -485,9 +485,12 @@ CDGParser.prototype.parseData = function (bytes) {
 ************************************************/
 
 var CDGPlayer = function (canvas) {
-  if (arguments.length > 0) {
-    this.init(canvas)
+  if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('Must be instantiated with a reference to a valid <canvas>')
   }
+
+  this.canvas = canvas
+  this.init()
 }
 CDGPlayer.prototype.init = function (canvas) {
   this.canvas = canvas.getContext('2d')

@@ -534,7 +534,7 @@ CDGPlayer.prototype.fastForward = function (count) {
 }
 
 CDGPlayer.prototype.play = function () {
-  if (!this.frameId) {
+  if (!this.frameId && this.instructions.length) {
     this.frameId = requestAnimationFrame(this.update.bind(this))
     this.lastTimestamp = performance.now()
   }

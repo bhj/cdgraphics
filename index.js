@@ -504,6 +504,8 @@ CDGPlayer.prototype.init = function () {
 }
 
 CDGPlayer.prototype.load = function (data) {
+  this.stop()
+
   var parser = new CDGParser()
   this.instructions = parser.parseData(data)
   this.context = new CDGContext(this.canvas)

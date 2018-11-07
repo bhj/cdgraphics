@@ -1,8 +1,4 @@
 
-var cdgLog = function (message) {
-  console.log(message)
-}
-
 /************************************************
 *
 * CDGContext represents a specific state of
@@ -225,7 +221,7 @@ CDGTileBlockInstruction.prototype.execute = function (context) {
 
   var b = context.DISPLAY_BOUNDS
   if (x + 6 > context.WIDTH || y + 12 > context.HEIGHT) {
-    cdgLog('TileBlock out of bounds (' + this.row + ',' + this.column + ')')
+    console.log('TileBlock out of bounds (' + this.row + ',' + this.column + ')')
     return
   }
 
@@ -460,7 +456,7 @@ CDGParser.prototype.parseOne = function (bytes, offset) {
     if (typeof (InstructionType) !== 'undefined') {
       return new InstructionType(bytes, offset)
     } else {
-      cdgLog('Unknown CDG instruction (instruction = ' + opcode + ')')
+      console.log('Unknown CDG instruction (instruction = ' + opcode + ')')
       return new CDGNoopInstruction()
     }
   }
@@ -487,7 +483,7 @@ CDGParser.prototype.parseData = function (bytes) {
 
 var CDGPlayer = function (canvas) {
   if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('Must be instantiated with a reference to a valid <canvas>')
+    throw new Error('Must be instantiated with a canvas element')
   }
 
   this.canvas = canvas
@@ -524,9 +520,9 @@ CDGPlayer.prototype.step = function () {
     this.instructions[this.pc].execute(this.context)
     this.pc += 1
   } else {
-    cdgLog('No more instructions.')
     this.pc = -1
     this.stop()
+    console.log('No more instructions.')
   }
 }
 

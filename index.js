@@ -6,10 +6,21 @@
 *
 ************************************************/
 
-var CDGContext = function (canvas) {
-  this.ctx = canvas.getContext('2d')
+var CDGContext = function (userCanvas) {
+  // visible canvas
+  this.userCanvas = userCanvas
+  this.userCanvasCtx = userCanvas.getContext('2d')
+
+  // offscreen canvas
+  this.canvas = document.createElement('canvas')
+  this.canvas.width = this.WIDTH
+  this.canvas.height = this.HEIGHT
+  this.ctx = this.canvas.getContext('2d')
+  this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
+
   this.init()
 }
+
 CDGContext.prototype.WIDTH = 300
 CDGContext.prototype.HEIGHT = 216
 CDGContext.prototype.DISPLAY_WIDTH = 288
@@ -22,78 +33,57 @@ CDGContext.prototype.init = function () {
   this.hOffset = 0
   this.vOffset = 0
   this.keyColor = null
-
-  this.clut = new Array(16) // color lookup table
-  for (var i = 0; i < 16; i++) {
-    this.clut[i] = 0
-  }
-
-  this.pixels = new Array(this.WIDTH * this.HEIGHT)
-  this.buffer = new Array(this.WIDTH * this.HEIGHT)
-
-  for (var i = 0; i < this.WIDTH * this.HEIGHT; i++) {
-    this.pixels[i] = 0
-    this.buffer[i] = 0
-  }
+  this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
+  this.pixels = new Array(this.WIDTH * this.HEIGHT).fill(0)
+  this.buffer = new Array(this.WIDTH * this.HEIGHT).fill(0)
+  this.lastScale = 0
 }
+
 CDGContext.prototype.setCLUTEntry = function (index, r, g, b) {
-  this.clut[index] = 'rgb(' + 17 * r + ',' + 17 * g + ',' + 17 * b + ')'
+  this.clut[index] = [r, g, b].map(c => c * 17)
 }
 
-CDGContext.prototype.renderFrameDebug = function () {
-  /* determine size of a 'pixel' that will fit. */
-  var pw = Math.min(Math.floor(this.ctx.canvas.clientWidth / this.WIDTH),
-  Math.floor(this.ctx.canvas.clientHeight / this.HEIGHT))
+CDGContext.prototype.renderFrame = function () {
+  const [left, top, right, bottom] = [0, 0, this.WIDTH, this.HEIGHT]
+  const scale = Math.min(
+    Math.floor(this.userCanvas.clientWidth / this.WIDTH),
+    Math.floor(this.userCanvas.clientHeight / this.HEIGHT),
+  )
 
-  /* canvas is too small */
-  if (pw == 0) {
-    /* could indicate this ... */
-    return
-  }
+  for (let x = left; x < right; x++) {
+    for (let y = top; y < bottom; y++) {
+      // The offset is where we draw the pixel in the raster data
+      const offset = 4 * (x + (y * this.WIDTH))
+      // Respect the horizontal and vertical offsets for grabbing the pixel color
+      const px = ((x - this.hOffset) + this.WIDTH) % this.WIDTH
+      const py = ((y - this.vOffset) + this.HEIGHT) % this.HEIGHT
+      const pixelIndex = px + (py * this.WIDTH)
+      const colorIndex = this.pixels[pixelIndex]
+      const [r, g, b] = this.clut[colorIndex]
 
-  this.ctx.save()
-  for (var x = 0; x < this.WIDTH; x++) {
-    for (var y = 0; y < this.HEIGHT; y++) {
-      var color_index = this.pixels[x + y * this.WIDTH]
-      if (color_index == this.keyColor) {
-        this.ctx.clearRect(x * pw, y * pw, pw, pw)
-      } else {
-        this.ctx.fillStyle = this.clut[color_index]
-        this.ctx.fillRect(x * pw, y * pw, pw, pw)
-      }
+      // Set the rgba values in the image data
+      this.imageData.data[offset] = r
+      this.imageData.data[offset + 1] = g
+      this.imageData.data[offset + 2] = b
+      this.imageData.data[offset + 3] = colorIndex === this.keyColor ? 0x00 : 0xff
     }
   }
-  this.ctx.restore()
-}
 
-// CDGContext.prototype.renderFrame = function (canvas) {
-//   /* determine size of a 'pixel' that will fit. */
-//   var pw = Math.min(Math.floor(canvas.width / this.DISPLAY_WIDTH),
-//   Math.floor(canvas.height / this.DISPLAY_HEIGHT))
-//
-//   /* canvas is too small */
-//   if (pw == 0) {
-//     /* could indicate this ... */
-//     return
-//   }
-//
-//   var canvas_xoff = 0
-//   var canvas_yoff = 0
-//   var ctx = canvas.getContext('2d')
-//   for (var x = 0; x < this.DISPLAY_WIDTH; x++) {
-//     for (var y = 0; y < this.DISPLAY_HEIGHT; y++) {
-//       var px = x + this.hOffset + this.DISPLAY_BOUNDS[0]
-//       var py = y + this.vOffset + this.DISPLAY_BOUNDS[1]
-//       var color_index = this.pixels[px + py * this.WIDTH]
-//       if (color_index == this.keyColor) {
-//         ctx.clearRect(canvas_xoff + x * pw, canvas_yoff + y * pw, pw, pw)
-//       } else {
-//         ctx.fillStyle = this.clut[color_index]
-//         ctx.fillRect(canvas_xoff + x * pw, canvas_yoff + y * pw, pw, pw)
-//       }
-//     }
-//   }
-// }
+  this.ctx.putImageData(this.imageData, 0, 0)
+
+  // copy to user canvas and scale
+  this.userCanvasCtx.drawImage(this.canvas, 0, 0, this.WIDTH * scale, this.HEIGHT * scale)
+
+  if (scale !== this.lastScale) {
+    this.lastScale = scale
+
+    // these seem to need to be reapplied whenever the scale factor for drawImage changes
+    this.userCanvasCtx.mozImageSmoothingEnabled = false
+    this.userCanvasCtx.webkitImageSmoothingEnabled = false
+    this.userCanvasCtx.msImageSmoothingEnabled = false
+    this.userCanvasCtx.imageSmoothingEnabled = false
+  }
+}
 
 var CDG_NOOP = 0
 var CDG_MEMORY_PRESET = 1
@@ -148,10 +138,9 @@ CDGMemoryPresetInstruction.prototype.init = function (bytes, offset) {
   this.color = bytes[doff] & 0x0F
   this.repeat = bytes[doff + 1] & 0x0F
 }
+
 CDGMemoryPresetInstruction.prototype.execute = function (context) {
-  for (var i = 0; i < context.WIDTH * context.HEIGHT; i++) {
-    context.pixels[i] = this.color
-  }
+  context.pixels.fill(this.color)
 }
 
 /************************************************
@@ -472,6 +461,7 @@ CDGParser.prototype.parseData = function (bytes) {
       instructions.push(instruction)
     }
   }
+
   return instructions
 }
 
@@ -501,18 +491,16 @@ CDGPlayer.prototype.init = function () {
 
 CDGPlayer.prototype.load = function (data) {
   this.stop()
+  this.init()
 
   var parser = new CDGParser()
   this.instructions = parser.parseData(data)
   this.context = new CDGContext(this.canvas)
-
   this.pc = 0
-  this.pos = 0
-  this.lastSyncPos = null
 }
 
 CDGPlayer.prototype.render = function () {
-  this.context.renderFrameDebug()
+  this.context.renderFrame()
 }
 
 CDGPlayer.prototype.step = function () {
@@ -520,8 +508,8 @@ CDGPlayer.prototype.step = function () {
     this.instructions[this.pc].execute(this.context)
     this.pc += 1
   } else {
-    this.pc = -1
     this.stop()
+    this.pc = -1
     console.log('No more instructions.')
   }
 }

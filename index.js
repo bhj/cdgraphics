@@ -1,4 +1,3 @@
-
 /************************************************
 *
 * CDGContext represents a specific state of
@@ -6,7 +5,7 @@
 *
 ************************************************/
 
-var CDGContext = function (userCanvas) {
+const CDGContext = function (userCanvas) {
   // visible canvas
   this.userCanvas = userCanvas
   this.userCanvasCtx = userCanvas.getContext('2d')
@@ -85,26 +84,26 @@ CDGContext.prototype.renderFrame = function () {
   }
 }
 
-var CDG_NOOP = 0
-var CDG_MEMORY_PRESET = 1
-var CDG_BORDER_PRESET = 2
-var CDG_TILE_BLOCK = 6
-var CDG_SCROLL_PRESET = 20
-var CDG_SCROLL_COPY = 24
-var CDG_SET_KEY_COLOR = 28
-var CDG_LOAD_CLUT_LOW = 30
-var CDG_LOAD_CLUT_HI = 31
-var CDG_TILE_BLOCK_XOR = 38
+const CDG_NOOP = 0
+const CDG_MEMORY_PRESET = 1
+const CDG_BORDER_PRESET = 2
+const CDG_TILE_BLOCK = 6
+const CDG_SCROLL_PRESET = 20
+const CDG_SCROLL_COPY = 24
+const CDG_SET_KEY_COLOR = 28
+const CDG_LOAD_CLUT_LOW = 30
+const CDG_LOAD_CLUT_HI = 31
+const CDG_TILE_BLOCK_XOR = 38
 
-var CDG_SCROLL_NONE = 0
-var CDG_SCROLL_LEFT = 1
-var CDG_SCROLL_RIGHT = 2
-var CDG_SCROLL_UP = 1
-var CDG_SCROLL_DOWN = 2
+const CDG_SCROLL_NONE = 0 // eslint-disable-line no-unused-vars
+const CDG_SCROLL_LEFT = 1
+const CDG_SCROLL_RIGHT = 2
+const CDG_SCROLL_UP = 1
+const CDG_SCROLL_DOWN = 2
 
-var CDG_DATA = 4
+const CDG_DATA = 4
 
-var CDGInstruction = function () {}
+const CDGInstruction = function () {}
 CDGInstruction.prototype.dump = function () {
   return this.name
 }
@@ -114,7 +113,7 @@ CDGInstruction.prototype.dump = function () {
 * NOOP
 *
 ************************************************/
-var CDGNoopInstruction = function () {}
+const CDGNoopInstruction = function () {}
 CDGNoopInstruction.prototype = new CDGInstruction()
 CDGNoopInstruction.prototype.instruction = CDG_NOOP
 CDGNoopInstruction.prototype.name = 'Noop'
@@ -125,7 +124,7 @@ CDGNoopInstruction.prototype.execute = function (context) {}
 * MEMORY_PRESET
 *
 ************************************************/
-var CDGMemoryPresetInstruction = function (bytes, offset) {
+const CDGMemoryPresetInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -134,7 +133,7 @@ CDGMemoryPresetInstruction.prototype = new CDGInstruction()
 CDGMemoryPresetInstruction.prototype.instruction = CDG_MEMORY_PRESET
 CDGMemoryPresetInstruction.prototype.name = 'Memory Preset'
 CDGMemoryPresetInstruction.prototype.init = function (bytes, offset) {
-  var doff = offset + CDG_DATA
+  const doff = offset + CDG_DATA
   this.color = bytes[doff] & 0x0F
   this.repeat = bytes[doff + 1] & 0x0F
 }
@@ -149,7 +148,7 @@ CDGMemoryPresetInstruction.prototype.execute = function (context) {
 *
 ************************************************/
 
-var CDGBorderPresetInstruction = function (bytes, offset) {
+const CDGBorderPresetInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -161,20 +160,20 @@ CDGBorderPresetInstruction.prototype.init = function (bytes, offset) {
   this.color = bytes[offset + CDG_DATA] & 0x0F
 }
 CDGBorderPresetInstruction.prototype.execute = function (context) {
-  var b = context.DISPLAY_BOUNDS
-  for (var x = 0; x < context.WIDTH; x++) {
-    for (var y = 0; y < b[1]; y++) {
+  const b = context.DISPLAY_BOUNDS
+  for (let x = 0; x < context.WIDTH; x++) {
+    for (let y = 0; y < b[1]; y++) {
       context.pixels[x + y * context.WIDTH] = this.color
     }
-    for (var y = b[3] + 1; y < context.HEIGHT; y++) {
+    for (let y = b[3] + 1; y < context.HEIGHT; y++) {
       context.pixels[x + y * context.WIDTH] = this.color
     }
   }
-  for (var y = b[1]; y <= b[3]; y++) {
-    for (var x = 0; x < b[0]; x++) {
+  for (let y = b[1]; y <= b[3]; y++) {
+    for (let x = 0; x < b[0]; x++) {
       context.pixels[x + y * context.WIDTH] = this.color
     }
-    for (var x = b[2] + 1; x < context.WIDTH; x++) {
+    for (let x = b[2] + 1; x < context.WIDTH; x++) {
       context.pixels[x + y * context.WIDTH] = this.color
     }
   }
@@ -186,7 +185,7 @@ CDGBorderPresetInstruction.prototype.execute = function (context) {
 *
 ************************************************/
 
-var CDGTileBlockInstruction = function (bytes, offset) {
+const CDGTileBlockInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -195,7 +194,7 @@ CDGTileBlockInstruction.prototype = new CDGInstruction()
 CDGTileBlockInstruction.prototype.instruction = CDG_TILE_BLOCK
 CDGTileBlockInstruction.prototype.name = 'Tile Block'
 CDGTileBlockInstruction.prototype.init = function (bytes, offset) {
-  var doff = offset + CDG_DATA
+  const doff = offset + CDG_DATA
   // some players check bytes[doff+1] & 0x20 and ignores if it is set (?)
   this.colors = [bytes[doff] & 0x0F, bytes[doff + 1] & 0x0F]
   this.row = bytes[doff + 2] & 0x1F
@@ -205,20 +204,19 @@ CDGTileBlockInstruction.prototype.init = function (bytes, offset) {
 }
 CDGTileBlockInstruction.prototype.execute = function (context) {
   /* blit a tile */
-  var x = this.column * context.TILE_WIDTH
-  var y = this.row * context.TILE_HEIGHT
+  const x = this.column * context.TILE_WIDTH
+  const y = this.row * context.TILE_HEIGHT
 
-  var b = context.DISPLAY_BOUNDS
   if (x + 6 > context.WIDTH || y + 12 > context.HEIGHT) {
     console.log('TileBlock out of bounds (' + this.row + ',' + this.column + ')')
     return
   }
 
-  for (var i = 0; i < 12; i++) {
-    var curbyte = this.pixels[i]
-    for (var j = 0; j < 6; j++) {
-      var color = this.colors[((curbyte >> (5 - j)) & 0x1)]
-      var offset = x + j + (y + i) * context.WIDTH
+  for (let i = 0; i < 12; i++) {
+    const curbyte = this.pixels[i]
+    for (let j = 0; j < 6; j++) {
+      const color = this.colors[((curbyte >> (5 - j)) & 0x1)]
+      const offset = x + j + (y + i) * context.WIDTH
       this.op(context, offset, color)
     }
   }
@@ -236,7 +234,7 @@ CDGTileBlockInstruction.prototype.dump = function () {
 *
 ************************************************/
 
-var CDGTileBlockXORInstruction = function (bytes, offset) {
+const CDGTileBlockXORInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -254,7 +252,7 @@ CDGTileBlockXORInstruction.prototype.op = function (context, offset, color) {
 *
 ************************************************/
 
-var CDGScrollPresetInstruction = function (bytes, offset) {
+const CDGScrollPresetInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -263,14 +261,14 @@ CDGScrollPresetInstruction.prototype = new CDGInstruction()
 CDGScrollPresetInstruction.prototype.instruction = CDG_SCROLL_PRESET
 CDGScrollPresetInstruction.prototype.name = 'Scroll Preset'
 CDGScrollPresetInstruction.prototype.init = function (bytes, offset) {
-  var doff = offset + CDG_DATA
+  const doff = offset + CDG_DATA
   this.color = bytes[doff] & 0x0F
 
-  var hScroll = bytes[doff + 1] & 0x3F
+  const hScroll = bytes[doff + 1] & 0x3F
   this.hCmd = (hScroll & 0x30) >> 4
   this.hOffset = (hScroll & 0x07)
 
-  var vScroll = bytes[doff + 2] & 0x3F
+  const vScroll = bytes[doff + 2] & 0x3F
   this.vCmd = (vScroll & 0x30) >> 4
   this.vOffset = (vScroll & 0x07)
 }
@@ -278,33 +276,33 @@ CDGScrollPresetInstruction.prototype.execute = function (context) {
   context.hOffset = Math.min(this.hOffset, 5)
   context.vOffset = Math.min(this.vOffset, 11)
 
-  var hmove = 0
-  if (this.hCmd == CDG_SCROLL_RIGHT) {
+  let hmove = 0
+  if (this.hCmd === CDG_SCROLL_RIGHT) {
     hmove = context.TILE_WIDTH
-  } else if (this.hCmd == CDG_SCROLL_LEFT) {
+  } else if (this.hCmd === CDG_SCROLL_LEFT) {
     hmove = -context.TILE_WIDTH
   }
 
-  var vmove = 0
-  if (this.vCmd == CDG_SCROLL_DOWN) {
+  let vmove = 0
+  if (this.vCmd === CDG_SCROLL_DOWN) {
     vmove = context.TILE_HEIGHT
-  } else if (this.vCmd == CDG_SCROLL_UP) {
+  } else if (this.vCmd === CDG_SCROLL_UP) {
     vmove = -context.TILE_HEIGHT
   }
 
-  if (hmove == 0 && vmove == 0) {
+  if (hmove === 0 && vmove === 0) {
     return
   }
 
-  var offx, offy
-  for (var x = 0; x < context.WIDTH; x++) {
-    for (var y = 0; y < context.HEIGHT; y++) {
+  let offx, offy
+  for (let x = 0; x < context.WIDTH; x++) {
+    for (let y = 0; y < context.HEIGHT; y++) {
       offx = x + hmove
       offy = y + vmove
       context.buffer[x + y * context.WIDTH] = this.getPixel(context, offx, offy)
     }
   }
-  var tmp = context.pixels
+  const tmp = context.pixels
   context.pixels = context.buffer
   context.buffer = tmp
 }
@@ -322,7 +320,7 @@ CDGScrollPresetInstruction.prototype.getPixel = function (context, offx, offy) {
 *
 ************************************************/
 
-var CDGScrollCopyInstruction = function (bytes, offset) {
+const CDGScrollCopyInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -342,7 +340,7 @@ CDGScrollPresetInstruction.prototype.getPixel = function (context, offx, offy) {
 *
 ************************************************/
 
-var CDGSetKeyColorInstruction = function (bytes, offset) {
+const CDGSetKeyColorInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -363,7 +361,7 @@ CDGSetKeyColorInstruction.prototype.execute = function (context) {
 *
 ************************************************/
 
-var CDGLoadCLUTLowInstruction = function (bytes, offset) {
+const CDGLoadCLUTLowInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -373,15 +371,15 @@ CDGLoadCLUTLowInstruction.prototype.instruction = CDG_LOAD_CLUT_LOW
 CDGLoadCLUTLowInstruction.prototype.name = 'Load CLUT (Low)'
 CDGLoadCLUTLowInstruction.prototype.CLUT_OFFSET = 0
 CDGLoadCLUTLowInstruction.prototype.init = function (bytes, offset) {
-  var doff = offset + CDG_DATA
+  const doff = offset + CDG_DATA
   this.colors = Array(8)
-  for (var i = 0; i < 8; i++) {
-    var cur = doff + 2 * i
+  for (let i = 0; i < 8; i++) {
+    const cur = doff + 2 * i
 
-    var color = (bytes[cur] & 0x3F) << 6
+    let color = (bytes[cur] & 0x3F) << 6
     color += bytes[cur + 1] & 0x3F
 
-    var rgb = Array(3)
+    const rgb = Array(3)
     rgb[0] = color >> 8 // red
     rgb[1] = (color & 0xF0) >> 4 // green
     rgb[2] = color & 0xF // blue
@@ -389,7 +387,7 @@ CDGLoadCLUTLowInstruction.prototype.init = function (bytes, offset) {
   }
 }
 CDGLoadCLUTLowInstruction.prototype.execute = function (context) {
-  for (var i = 0; i < 8; i++) {
+  for (let i = 0; i < 8; i++) {
     context.setCLUTEntry(i + this.CLUT_OFFSET,
       this.colors[i][0],
       this.colors[i][1],
@@ -403,7 +401,7 @@ CDGLoadCLUTLowInstruction.prototype.execute = function (context) {
 *
 ************************************************/
 
-var CDGLoadCLUTHighInstruction = function (bytes, offset) {
+const CDGLoadCLUTHighInstruction = function (bytes, offset) {
   if (arguments.length > 0) {
     this.init(bytes, offset)
   }
@@ -419,7 +417,7 @@ CDGLoadCLUTHighInstruction.prototype.CLUT_OFFSET = 8
 *
 ************************************************/
 
-var CDGParser = function () {}
+const CDGParser = function () {}
 CDGParser.prototype.COMMAND_MASK = 0x3F
 CDGParser.prototype.CDG_COMMAND = 0x9
 CDGParser.prototype.PACKET_SIZE = 24
@@ -436,12 +434,12 @@ CDGParser.prototype.BY_TYPE[CDG_LOAD_CLUT_HI] = CDGLoadCLUTHighInstruction
 CDGParser.prototype.BY_TYPE[CDG_TILE_BLOCK_XOR] = CDGTileBlockXORInstruction
 
 CDGParser.prototype.parseOne = function (bytes, offset) {
-  var command = bytes[offset] & this.COMMAND_MASK
+  const command = bytes[offset] & this.COMMAND_MASK
   /* if this packet is a cdg command */
 
-  if (command == this.CDG_COMMAND) {
-    var opcode = bytes[offset + 1] & this.COMMAND_MASK
-    var InstructionType = this.BY_TYPE[opcode]
+  if (command === this.CDG_COMMAND) {
+    const opcode = bytes[offset + 1] & this.COMMAND_MASK
+    const InstructionType = this.BY_TYPE[opcode]
     if (typeof (InstructionType) !== 'undefined') {
       return new InstructionType(bytes, offset)
     } else {
@@ -453,10 +451,10 @@ CDGParser.prototype.parseOne = function (bytes, offset) {
 }
 
 CDGParser.prototype.parseData = function (bytes) {
-  var instructions = []
+  const instructions = []
 
-  for (var offset = 0; offset < bytes.length; offset += this.PACKET_SIZE) {
-    var instruction = this.parseOne(bytes, offset)
+  for (let offset = 0; offset < bytes.length; offset += this.PACKET_SIZE) {
+    const instruction = this.parseOne(bytes, offset)
     if (instruction != null) {
       instructions.push(instruction)
     }
@@ -471,7 +469,7 @@ CDGParser.prototype.parseData = function (bytes) {
 *
 ************************************************/
 
-var CDGPlayer = function (canvas) {
+const CDGPlayer = function (canvas) {
   if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('Must be instantiated with a canvas element')
   }
@@ -493,7 +491,7 @@ CDGPlayer.prototype.load = function (data) {
   this.stop()
   this.init()
 
-  var parser = new CDGParser()
+  const parser = new CDGParser()
   this.instructions = parser.parseData(data)
   this.context = new CDGContext(this.canvas)
   this.pc = 0
@@ -515,7 +513,7 @@ CDGPlayer.prototype.step = function () {
 }
 
 CDGPlayer.prototype.fastForward = function (count) {
-  var max = this.pc + count
+  const max = this.pc + count
   while (this.pc >= 0 && this.pc < max) {
     this.step()
   }
@@ -555,9 +553,9 @@ CDGPlayer.prototype.update = function (timestamp) {
 
   // determine packet we should be at, based on spec
   // of 4 packets per sector @ 75 sectors per second
-  var newPc = Math.floor(4 * 75 * (this.pos / 1000))
+  const newPc = Math.floor(4 * 75 * (this.pos / 1000))
 
-  var ffAmt = newPc - this.pc
+  const ffAmt = newPc - this.pc
   if (ffAmt > 0) {
     this.fastForward(ffAmt)
     this.render()

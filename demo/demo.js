@@ -1,32 +1,34 @@
-const audioUrl = 'YOUR_MP3_FILE.mp3' // place in ./build folder
-const cdgUrl = 'YOUR_CDG_FILE.cdg' // place in ./build folder
+const audioUrl = 'YOUR_MP3_FILE.mp3'
+const cdgUrl = 'YOUR_CDG_FILE.cdg'
 
 const app = document.getElementById('app')
 const audio = document.createElement('audio')
 const canvas = document.createElement('canvas')
-const CDGPlayer = require('./index.js')
+const CDGPlayer = require('../index.js')
 const cdg = new CDGPlayer(canvas)
 
-// create <canvas> element
+// add <canvas> to page
 canvas.width = 600
 canvas.height = 432
+canvas.style.border = '1px solid #ccc'
 app.appendChild(canvas)
 
-// create <audio> element
+// add <audio> to page
 audio.src = audioUrl
+audio.controls = true
+audio.style.display = 'block'
 app.appendChild(audio)
 
-// start graphics when audio element begins playing
-audio.addEventListener('playing', function () {
-  cdg.play()
-})
+// link to audio element's play/pause events
+audio.addEventListener('play', function () { cdg.play() })
+audio.addEventListener('pause', function () { cdg.stop() })
 
 // sync to audio element's currentTime property
 audio.addEventListener('timeupdate', function () {
   cdg.sync(audio.currentTime * 1000) // convert to ms
 })
 
-// download and decode cdg file asynchronously
+// download and load cdg file
 fetch(cdgUrl)
   .then(checkStatus)
   .then(function (response) {
@@ -34,10 +36,6 @@ fetch(cdgUrl)
   }).then(function (buffer) {
     // arrayBuffer to Uint8Array
     cdg.load(new Uint8Array(buffer))
-
-    // load and play the audio file, which will fire
-    // the "playing" event and play() our CDGraphics
-    audio.play()
   }).catch(function (error) {
     console.log('request failed', error)
   })

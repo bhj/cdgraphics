@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
-    "start": "webpack-dev-server --content-base build",
+    "demo": "webpack-dev-server --content-base demo",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

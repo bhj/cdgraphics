@@ -349,10 +349,10 @@ CDGSetKeyColorInstruction.prototype = new CDGInstruction()
 CDGSetKeyColorInstruction.prototype.instruction = CDG_SET_KEY_COLOR
 CDGSetKeyColorInstruction.prototype.name = 'Set Key Color'
 CDGSetKeyColorInstruction.prototype.init = function (bytes, offset) {
-  this.colorIndex = bytes[offset + CDG_DATA] & 0x0F
+  this.index = bytes[offset + CDG_DATA] & 0x0F
 }
 CDGSetKeyColorInstruction.prototype.execute = function (context) {
-  context.keyColor = context.clut[this.colorIndex]
+  context.keyColor = this.index
 }
 
 /************************************************

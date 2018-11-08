@@ -70,6 +70,11 @@ CDGContext.prototype.renderFrame = function () {
 
   this.ctx.putImageData(this.imageData, 0, 0)
 
+  // If there's transparency, clear the user canvas first
+  if (this.keyColor >= 0) {
+    this.userCanvasCtx.clearRect(0, 0, this.WIDTH * scale, this.HEIGHT * scale)
+  }
+
   // copy to user canvas and scale
   this.userCanvasCtx.drawImage(this.canvas, 0, 0, this.WIDTH * scale, this.HEIGHT * scale)
 

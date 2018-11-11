@@ -50,9 +50,13 @@ const cdg = new CDGPlayer(canvas, {
 Methods
 -------
 
+### `forceTransparent(bool)`
+
+Enables or disables the `forceTransparent` option (see Usage above) while playing or paused.
+
 ### `load(bytes)`
 
-Takes an array of bytes and parses the CD+G instructions. This must be done before calling `play`. Here's an example using the fetch API:
+Takes an array of bytes and parses the CD+G instructions. This method is synchronous and must be done before calling `play`. Here's an example using the fetch API:
 
 ```js
 fetch(cdgFileUrl)

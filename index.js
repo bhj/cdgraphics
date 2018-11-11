@@ -25,7 +25,7 @@ const PACKET_SIZE = 24
 *
 ************************************************/
 class CDGContext {
-  constructor (userCanvas, cfg = {}) {
+  constructor (userCanvas, { forceTransparent = false } = {}) {
     // visible canvas
     this.userCanvas = userCanvas
     this.userCanvasCtx = userCanvas.getContext('2d')
@@ -36,7 +36,7 @@ class CDGContext {
     this.canvas.height = this.HEIGHT
     this.ctx = this.canvas.getContext('2d')
     this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
-    this.forceTransparent = cfg.forceTransparent
+    this.forceTransparent = !!forceTransparent
 
     this.init()
   }
@@ -173,8 +173,6 @@ class CDGBorderPresetInstruction extends CDGInstruction {
   }
 
   execute ({ DISPLAY_BOUNDS, WIDTH, pixels, HEIGHT }) {
-    // @todo skip if forceTransparent?
-
     const b = DISPLAY_BOUNDS
     for (let x = 0; x < WIDTH; x++) {
       for (let y = 0; y < b[1]; y++) {
@@ -450,26 +448,23 @@ CDGParser.BY_TYPE[CDG_TILE_BLOCK_XOR] = CDGTileBlockXORInstruction
 *
 ************************************************/
 class CDGPlayer {
-  constructor (canvas, {
-    forceTransparent = false,
-    onBackgroundChange,
-  } = {}) {
+  constructor (canvas, opts = {}) {
     if (!(canvas instanceof HTMLCanvasElement)) {
       throw new Error('Must be instantiated with a canvas element')
     }
 
-    if (typeof forceTransparent !== 'boolean') {
-      throw new Error(`'forceTransparent' option must be a boolean`)
-    }
-
-    if (onBackgroundChange && typeof onBackgroundChange !== 'function') {
+    if (opts.onBackgroundChange && typeof opts.onBackgroundChange !== 'function') {
       throw new Error(`'onBackgroundChange' option must be a function`)
     }
 
     this.canvas = canvas
-    this.forceTransparent = forceTransparent
-    this.onBackgroundChange = onBackgroundChange
+    this.opts = opts
     this.init()
+  }
+
+  forceTransparent (val) {
+    this.context.forceTransparent = val
+    this.context.renderFrame()
   }
 
   init () {
@@ -487,9 +482,7 @@ class CDGPlayer {
     this.init()
 
     this.instructions = CDGParser.parseData(data)
-    this.context = new CDGContext(this.canvas, {
-      forceTransparent: this.forceTransparent,
-    })
+    this.context = new CDGContext(this.canvas, this.opts)
     this.pc = 0
   }
 
@@ -553,13 +546,13 @@ class CDGPlayer {
     this.fastForward(ffAmt)
     this.context.renderFrame()
 
-    if (this.onBackgroundChange) {
+    if (this.opts.onBackgroundChange) {
       const cur = this.context.backgroundRGBA
       const last = this.lastBackground
 
       if (cur && !(last && cur.every((val, i) => val === last[i]))) {
         this.lastBackground = cur
-        this.onBackgroundChange(cur)
+        this.opts.onBackgroundChange(cur)
       }
     }
   }

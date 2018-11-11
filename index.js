@@ -157,10 +157,6 @@ class CDGMemoryPresetInstruction extends CDGInstruction {
   execute (context) {
     context.pixels.fill(this.color)
     context.bgColor = this.color
-
-    if (context.forceTransparent) {
-      context.keyColor = this.color
-    }
   }
 }
 

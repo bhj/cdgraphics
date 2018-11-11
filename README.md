@@ -3,8 +3,9 @@ cdgraphics
 
 A [CD Graphics (CD+G)](https://en.wikipedia.org/wiki/CD%2BG) implementation in JavaScript that draws to an HTML5 canvas. It's based on the [player by Luke Tucker](https://github.com/ltucker/html5_karaoke) and incorporates rendering improvements from [Keith McKnight's fork](https://github.com/kmck/karaoke).
 
-* Uses [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) and an offscreen canvas for improved playback performance
+* Uses [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) and an offscreen canvas for better performance
 * Has a `sync` method for synchronizing to an audio element
+* ES2015 compatible
 * Not designed for server-side rendering
 
 Installation
@@ -15,19 +16,43 @@ $ npm i cdgraphics
 
 Usage
 -----
+
+### `new CDGPlayer(canvas, [options])`
+
+- `canvas`: Your canvas element. Required.
+- `options`: Optional object with one or more of the following properties:
+
+| Option | Type | Description | Default
+| --- | --- | --- | --- |
+| forceTransparent | boolean | Experimental option that attempts to force backgrounds to be transparent, even if the CD+G title did not explicitly specify it. | false
+| onBackgroundChange | function | Callback that will be invoked when the canvas background color changes. The color is passed as an array like `[r, g, b, a]` with `a` being 0 or 1. The reported alpha value includes the effect of the forceTransparent option, if enabled. | undefined |
+
+Basic example:
+
 ```js
 const CDGPlayer = require('cdgraphics')
 
-// pass it your canvas DOM element
+const canvas = document.createElement('canvas') // or your existing element
 const cdg = new CDGPlayer(canvas)
 ```
 
-API
+Example with options:
+```js
+const CDGPlayer = require('cdgraphics')
+
+const canvas = document.createElement('canvas') // or your existing element
+const cdg = new CDGPlayer(canvas, {
+  forceTransparent: true,
+  onBackgroundChange: color => { console.log('onBackgroundChange', color) }
+})
+```
+
+Methods
 -------
 
-### .load(data)
+### `load(bytes)`
 
-Takes a CD+G data stream as an array and parses it in preparation for playback. This must be done before calling `play`. Here's an example using the fetch API:
+Takes an array of bytes and parses the CD+G instructions. This must be done before calling `play`. Here's an example using the fetch API:
 
 ```js
 fetch(cdgFileUrl)
@@ -37,15 +62,15 @@ fetch(cdgFileUrl)
   })
 ```
 
-### .play()
+### `play()`
 
 Starts or continues playback. Has no effect if already playing.
 
-### .stop()
+### `stop()`
 
 Stops (pauses) playback. Has no effect if already stopped.
 
-### .sync(ms)
+### `sync(ms)`
 
 Sets the last known position of the audio source, in milliseconds. This can be used with the
  [timeupdate](https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate) event of an audio element to keep the graphics in sync:

@@ -50,11 +50,11 @@ const cdg = new CDGPlayer(canvas, {
 Methods
 -------
 
-### `forceTransparent(bool)`
+### `forceTransparent(boolean)`
 
 Enables or disables the `forceTransparent` option (see Usage above) while playing or paused.
 
-### `load(bytes)`
+### `load(array)`
 
 Takes an array of bytes and parses the CD+G instructions. This method is synchronous and must be done before calling `play`. Here's an example using the fetch API:
 
@@ -74,9 +74,9 @@ Starts or continues playback. Has no effect if already playing.
 
 Stops (pauses) playback. Has no effect if already stopped.
 
-### `sync(ms)`
+### `sync(number)`
 
-Sets the last known position of the audio source, in milliseconds. This can be used with the
+Sets the last known position of the audio source in milliseconds (ms). This can be used with the
  [timeupdate](https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate) event of an audio element to keep the graphics in sync:
 
  ```js

@@ -63,7 +63,7 @@ class CDGContext {
 
     return [
       ...this.clut[this.bgColor], // rgb
-      this.bgColor === this.keyColor ? 0 : 1, // a
+      this.bgColor === this.keyColor || this.forceTransparent ? 0 : 1, // a
     ]
   }
 

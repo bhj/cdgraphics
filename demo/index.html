@@ -3,9 +3,22 @@
   <head>
     <meta charset="utf-8">
     <title>cdgraphics demo</title>
+    <style type="text/css">
+      body { background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+      app { padding: 1em; }
+      #audio { display: block; }
+    </style>
   </head>
-  <body style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;">
-    <div id="app"></div>
+  <body>
+    <div id="app">
+      <canvas id="canvas" width="600" height="432"></canvas>
+      <audio id="audio" src="test.mp3" controls></audio>
+
+      <label style="background: white;">
+        <input type="checkbox" id="force_transparent" value="1" />
+        Force transparent background
+      </label>
+    </div>
     <script src="bundle.js"></script>
   </body>
 </html>

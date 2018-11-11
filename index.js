@@ -422,7 +422,7 @@ class CDGParser {
   static parseData (bytes) {
     const instructions = []
 
-    for (let offset = 0; offset < bytes.length; offset += this.PACKET_SIZE) {
+    for (let offset = 0; offset < bytes.length; offset += PACKET_SIZE) {
       const instruction = this.parseOne(bytes, offset)
 
       if (instruction != null) {
@@ -436,7 +436,6 @@ class CDGParser {
 
 CDGParser.COMMAND_MASK = 0x3F
 CDGParser.CDG_COMMAND = 0x9
-CDGParser.PACKET_SIZE = 24
 
 CDGParser.BY_TYPE = {}
 CDGParser.BY_TYPE[CDG_MEMORY_PRESET] = CDGMemoryPresetInstruction

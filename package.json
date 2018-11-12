@@ -1,6 +1,6 @@
 {
   "name": "cdgraphics",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "CD Graphics (CD+G) JS/HTML5 player",
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
   "author": "Brandon Jones",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^5.8.0",
+    "eslint": "^5.9.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-node": "^8.0.0",

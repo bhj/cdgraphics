@@ -28,6 +28,7 @@ Usage
 | --- | --- | --- | --- |
 | forceTransparent | boolean | Attempts to force backgrounds to be transparent, even if the CD+G title did not explicitly specify it. Experimental. | false
 | onBackgroundChange | function | Callback that will be invoked when the canvas background color changes. The RGBA color is passed as an array like `[r, g, b, a]` with alpha being 0 or 1. The reported alpha includes the effect of the `forceTransparent` option, if enabled. | undefined |
+| scale | number | If specified, force drawing graphics at this level of scale. If unspecified, scale will be the largest multiple of 300x216 that can fit in the given canvas. | undefined |
 
 Basic example:
 

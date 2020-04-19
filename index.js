@@ -25,7 +25,7 @@ const PACKET_SIZE = 24
 *
 ************************************************/
 class CDGContext {
-  constructor (userCanvas, { forceTransparent = false } = {}) {
+  constructor (userCanvas, { forceTransparent = false, scale = null } = {}) {
     // visible canvas
     this.userCanvas = userCanvas
     this.userCanvasCtx = userCanvas.getContext('2d')
@@ -37,6 +37,7 @@ class CDGContext {
     this.ctx = this.canvas.getContext('2d')
     this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
     this.forceTransparent = !!forceTransparent
+    this.scale = scale;
 
     this.init()
   }
@@ -69,7 +70,7 @@ class CDGContext {
 
   renderFrame () {
     const [left, top, right, bottom] = [0, 0, this.WIDTH, this.HEIGHT]
-    const scale = Math.min(
+    const scale = this.scale || Math.min(
       Math.floor(this.userCanvas.clientWidth / this.WIDTH),
       Math.floor(this.userCanvas.clientHeight / this.HEIGHT),
     )

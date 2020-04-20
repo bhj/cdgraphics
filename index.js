@@ -121,7 +121,7 @@ CDGContext.prototype.WIDTH = 300
 CDGContext.prototype.HEIGHT = 216
 CDGContext.prototype.DISPLAY_WIDTH = 288
 CDGContext.prototype.DISPLAY_HEIGHT = 192
-CDGContext.prototype.DISPLAY_BOUNDS = [ 6, 12, 294, 204 ]
+CDGContext.prototype.DISPLAY_BOUNDS = [6, 12, 294, 204]
 CDGContext.prototype.TILE_WIDTH = 6
 CDGContext.prototype.TILE_HEIGHT = 12
 

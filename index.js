@@ -49,7 +49,6 @@ class CDGContext {
     this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
     this.pixels = new Array(this.WIDTH * this.HEIGHT).fill(0)
     this.buffer = new Array(this.WIDTH * this.HEIGHT).fill(0)
-    this.lastScale = 0
   }
 
   setCLUTEntry (index, r, g, b) {
@@ -70,8 +69,8 @@ class CDGContext {
   renderFrame () {
     const [left, top, right, bottom] = [0, 0, this.WIDTH, this.HEIGHT]
     const scale = Math.min(
-      Math.floor(this.userCanvas.clientWidth / this.WIDTH),
-      Math.floor(this.userCanvas.clientHeight / this.HEIGHT),
+      this.userCanvas.clientWidth / this.WIDTH,
+      this.userCanvas.clientHeight / this.HEIGHT,
     )
 
     for (let x = left; x < right; x++) {
@@ -102,18 +101,13 @@ class CDGContext {
       this.userCanvasCtx.clearRect(0, 0, this.WIDTH * scale, this.HEIGHT * scale)
     }
 
+    // In at least Chrome and Firefox, this gets re-enabled each time the
+    // canvas width or height gets set, even if set to the same value, so
+    // rather than trying to detect a resize, just disable on each frame
+    this.userCanvasCtx.imageSmoothingEnabled = false
+
     // copy to destination canvas and scale
     this.userCanvasCtx.drawImage(this.canvas, 0, 0, this.WIDTH * scale, this.HEIGHT * scale)
-
-    if (scale !== this.lastScale) {
-      this.lastScale = scale
-
-      // these seem to need to be reapplied whenever the scale factor for drawImage changes
-      this.userCanvasCtx.mozImageSmoothingEnabled = false
-      this.userCanvasCtx.webkitImageSmoothingEnabled = false
-      this.userCanvasCtx.msImageSmoothingEnabled = false
-      this.userCanvasCtx.imageSmoothingEnabled = false
-    }
   }
 }
 

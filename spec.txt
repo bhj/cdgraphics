@@ -39,7 +39,7 @@ CD-ROM player you can't access the Subchannel information - it is never sent to
 the computer.  In fact, until recently on most CD-ROM players, you couldn't read
 the Content data on an audio track either. You could only read the Content data a
 data track which is used specifically for storing computer information.
-Presumeably, this was done to prevent people from easily pirating Audio CDs.
+Presumably, this was done to prevent people from easily pirating Audio CDs.
 
 More recently however, manufacturers have started producing drives that allow the
 computer to access not only the Content data on an audio track, but also the
@@ -181,7 +181,7 @@ for a CD+G player in C.
 		switch (subCode.instruction & SC_MASK) {
 		case CDG_MEMORYPRESET:		MemoryPreset(subCode.data);		break;
 		case CDG_BORDERPRESET:		BorderPreset(subCode.data);		break;
-   			// etc...  - implemement each instruction listed above
+   			// etc...  - implement each instruction listed above
 		}
 	}
 
@@ -217,7 +217,7 @@ used.  So, for example, If I refer to subCode.data[0], I actually mean
 Memory Preset (subCode.instruction==1)
 ****
 
-In this instruction, the 16 byte data field is interepreted as follows.
+In this instruction, the 16 byte data field is interpreted as follows.
 
  typedef struct {
 	char	color;				// Only lower 4 bits are used, mask with 0x0F
@@ -236,7 +236,7 @@ reliable data stream, you can ignore the command if repeat != 0.
 Border Preset (subCode.instruction==2)
 ***
 
-In this instruction, the 16 byte data field is interepreted as follows.
+In this instruction, the 16 byte data field is interpreted as follows.
 
  typedef struct {
 	char	color;				// Only lower 4 bits are used, mask with 0x0F
@@ -254,7 +254,7 @@ Tile Block XOR (subCode.instruction==38)
 ***
 
 These commands load a 12 x 6 tile of pixels from the subCode.data area.  I recall
-that in the original CD+G spec, the tile is refered to as a "font", but I think
+that in the original CD+G spec, the tile is referred to as a "font", but I think
 the word tile is more appropriate, because the tile can (and does) contain any
 graphical image, not just text. Larger images are built by using multiple tiles.
 The XOR variant is a special case of the same command, the difference is
@@ -296,7 +296,7 @@ Scroll Preset (subCode.instruction==20)
 Scroll Copy (subCode.instruction==24)
 ***
 
-In these instruction, the 16 byte data field is interepreted as follows.
+In these instruction, the 16 byte data field is interpreted as follows.
 
  typedef struct {
 	char	color;				// Only lower 4 bits are used, mask with 0x0F
@@ -318,7 +318,7 @@ The hScroll field is a compound field. It can be divided into two fields like so
   SCmd = (hScroll & 0x30) >> 4;
   HOffset = (hScroll & 0x07);
 
-	SCmd is a scrolliing instruction, which is either 0, 1 or 2.
+	SCmd is a scrolling instruction, which is either 0, 1 or 2.
 		0 means don't scroll
 		1 means scroll 6 pixels to the right,
 		2 means scroll 6 pixels to the left.
@@ -332,7 +332,7 @@ fields like so:
   SCmd = (vScroll & 0x30) >> 4;
   VOffset = (vScroll & 0x0F);
 
-	SCmd is a scrolliing instruction, which is either 0, 1 or 2.
+	SCmd is a scrolling instruction, which is either 0, 1 or 2.
 		0 means don't scroll
 		1 means scroll 12 pixels down,
 		2 means scroll 12 pixels up.
@@ -363,7 +363,7 @@ Define Transparent Color (subCode.instruction==28)
 ***
 
 This command is used to define a CLUT color as being transparent, for example so
-that the the graphics can be overlayed on top of a live video signal.
+that the the graphics can be overlaid on top of a live video signal.
 
 
 ***
@@ -392,4 +392,4 @@ Note that P and Q channel bits need to be masked off (they are marked
 here with Xs.
 
 The Load CLUT commands are often used in CD+G to provide the illusion of
-animation through the use of color cyling.
+animation through the use of color cycling.

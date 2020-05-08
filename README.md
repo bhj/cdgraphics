@@ -1,12 +1,12 @@
 cdgraphics
 ==========
 
-A [CD Graphics (CD+G)](https://en.wikipedia.org/wiki/CD%2BG) implementation in JavaScript that draws to an HTML5 canvas. It's based on the [player by Luke Tucker](https://github.com/ltucker/html5_karaoke) with  rendering improvements from [Keith McKnight's fork](https://github.com/kmck/karaoke).
+[CD+Graphics (CD+G)](https://en.wikipedia.org/wiki/CD%2BG) implementation in JavaScript that draws to an HTML5 canvas. It's based on the [player by Luke Tucker](https://github.com/ltucker/html5_karaoke) with improvements from [Keith McKnight's fork](https://github.com/kmck/karaoke).
 
-* Uses [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) and offscreen canvas rendering for 60fps playback
+* Fast (60fps) rendering using [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame)
 * Supports audio synchronization
-* Supports a callback for canvas background color changes
-* Option to force background transparency (experimental)
+* Callback for CD+G title background color changes
+* Option to force CD+G title transparent background
 * ES2015 compatible
 * Not designed for server-side rendering
 
@@ -22,14 +22,14 @@ Usage
 ### `new CDGPlayer(canvas, [options])`
 
 - `canvas`: Your canvas element. Required.
-- `options`: Optional object with one or more of the following properties:
+- `options`: Optional object with one or more of the following:
 
-| Option | Type | Description | Default
+| Property | Type | Description | Default
 | --- | --- | --- | --- |
-| forceTransparent | boolean | Attempts to force backgrounds to be transparent, even if the CD+G title did not explicitly specify it. Experimental. | false
-| onBackgroundChange | function | Callback that will be invoked when the canvas background color changes. The RGBA color is passed as an array like `[r, g, b, a]` with alpha being 0 or 1. The reported alpha includes the effect of the `forceTransparent` option, if enabled. | undefined |
+| forceTransparent | boolean | Force backgrounds to be transparent, even if the CD+G title did not explicitly specify it. | false
+| onBackgroundChange | function | Will be called when the CD+G title's background color or alpha changes. The RGBA color is passed as an array like `[r, g, b, a]` with alpha being 0 or 1. The reported alpha includes the effect of the `forceTransparent` option, if enabled. | undefined |
 
-Basic example:
+The following example creates and passes a `<canvas>` to the constructor, then downloads and plays the .cdg file:
 
 ```js
 const CDGPlayer = require('cdgraphics')
@@ -82,7 +82,7 @@ Pauses playback. Has no effect if already paused.
 ### `sync(number)`
 
 Sets the last known position of the audio source in milliseconds (ms). This can be used with the
- [timeupdate](https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate) event of an audio element to keep the graphics in sync:
+ [timeupdate](https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate) event of an audio element to keep the graphics synchronized:
 
  ```js
  // your <audio> element

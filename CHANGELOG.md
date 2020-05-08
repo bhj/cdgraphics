@@ -1,12 +1,12 @@
 ## v3.0.0 (TBD)
 
 **Breaking changes:**
+- Dropped support for Internet Explorer, Chrome < v30, Firefox < v51 (removed vendor prefixes for `imageSmoothingEnabled`)
 - The `stop()` method has been renamed `pause()`
-- Dropped official support for Internet Explorer, Chrome < v30, Firefox < v51 (removed vendor prefixes for `imageSmoothingEnabled`)
 
 **Improved:**
-- Graphics now scale smoothly with the canvas instead of at fixed increments
-- Graphics no longer temporarily appear blurry while resizing
+- Graphics now smoothly scale with the canvas instead of at fixed increments
+- Canvas no longer temporarily appears blurry while resizing
 
 ## v2.0.1 (Nov 11, 2018)
 

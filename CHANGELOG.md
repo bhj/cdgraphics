@@ -1,7 +1,7 @@
 ## v3.0.0 (TBD)
 
 **Breaking changes:**
-- Dropped support for Internet Explorer, Chrome < v30, Firefox < v51 (removed vendor prefixes for `imageSmoothingEnabled`)
+- Dropped support for Internet Explorer, Chrome < v30, Firefox < v51 (removed vendor prefixes for [`imageSmoothingEnabled`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/imageSmoothingEnabled))
 - The `stop()` method has been renamed `pause()`
 
 **Improved:**

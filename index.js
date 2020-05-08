@@ -472,7 +472,7 @@ class CDGPlayer {
   }
 
   load (data) {
-    this.stop()
+    this.pause()
     this.init()
 
     this.instructions = CDGParser.parseData(data)
@@ -485,7 +485,7 @@ class CDGPlayer {
       this.instructions[this.pc].execute(this.context)
       this.pc += 1
     } else {
-      this.stop()
+      this.pause()
       this.pc = -1
       console.log('No more instructions.')
     }
@@ -505,7 +505,7 @@ class CDGPlayer {
     }
   }
 
-  stop () {
+  pause () {
     cancelAnimationFrame(this.frameId)
     this.frameId = null
   }

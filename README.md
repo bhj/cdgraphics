@@ -73,11 +73,11 @@ fetch(cdgFileUrl)
 
 ### `play()`
 
-Starts or continues playback. Has no effect if already playing.
+Starts or resumes playback. Has no effect if already playing.
 
-### `stop()`
+### `pause()`
 
-Stops (pauses) playback. Has no effect if already stopped.
+Pauses playback. Has no effect if already paused.
 
 ### `sync(number)`
 

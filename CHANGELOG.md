@@ -1,11 +1,12 @@
 ## v3.0.0 (TBD)
 
-**Breaking changes:**
-- Dropped support for Internet Explorer, Chrome < v30, Firefox < v51 (removed vendor prefixes for [`imageSmoothingEnabled`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/imageSmoothingEnabled))
+**Breaking changes/migrating from 2.x:**
+- Internet Explorer, Chrome < v30, and Firefox < v51 are no longer officially supported (removed vendor prefixes for [`imageSmoothingEnabled`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/imageSmoothingEnabled))
 - The `stop()` method has been renamed `pause()`
+- The `sync()` method has been replaced with `syncTime()` which expects a time in seconds (instead of ms)
 
 **Improved:**
-- Graphics now smoothly scale with the canvas instead of at fixed increments
+- Graphics now scale fluidly with the canvas instead of at fixed increments
 - Canvas no longer temporarily appears blurry while resizing
 
 ## v2.0.1 (Nov 11, 2018)

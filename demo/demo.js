@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   audio.addEventListener('play', () => { cdg.play() })
   audio.addEventListener('pause', () => { cdg.pause() })
   audio.addEventListener('timeupdate', () => {
-    cdg.sync(audio.currentTime * 1000) // convert to ms
+    cdg.syncTime(audio.currentTime)
   })
 
   // checkbox for forceTransparent

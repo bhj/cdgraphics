@@ -79,15 +79,15 @@ Starts or resumes playback. Has no effect if already playing.
 
 Pauses playback. Has no effect if already paused.
 
-### `sync(number)`
+### `syncTime(number)`
 
-Sets the last known position of the audio source in milliseconds (ms). This can be used with the
+Sets the last known audio position in seconds (s). This can be used with the
  [timeupdate](https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate) event of an audio element to keep the graphics synchronized:
 
  ```js
  // your <audio> element
  audio.addEventListener('timeupdate', function () {
-   cdg.sync(audio.currentTime * 1000) // convert to ms
+   cdg.syncTime(audio.currentTime)
  })
  ```
 

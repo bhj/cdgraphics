@@ -448,7 +448,7 @@ class CDGPlayer {
     }
 
     if (opts.onBackgroundChange && typeof opts.onBackgroundChange !== 'function') {
-      throw new Error(`'onBackgroundChange' option must be a function`)
+      throw new Error('option "onBackgroundChange" must be a function')
     }
 
     this.canvas = canvas
@@ -462,17 +462,17 @@ class CDGPlayer {
   }
 
   init () {
-    this.instructions = []
-    this.pc = -1 // packet counter
     this.frameId = null
-    this.pos = 0 // current position in ms
-    this.lastSyncPos = null // ms
-    this.lastTimestamp = null // DOMHighResTimeStamp
+    this.instructions = []
+    this.pc = -1 // current packet
+    this.pos = 0 // current position (s)
+    this.lastSyncPos = null // (s)
+    this.refTimestamp = null // DOMHighResTimeStamp (ms)
     this.lastBackground = null
   }
 
   load (data) {
-    this.stop()
+    this.pause()
     this.init()
 
     this.instructions = CDGParser.parseData(data)
@@ -485,7 +485,7 @@ class CDGPlayer {
       this.instructions[this.pc].execute(this.context)
       this.pc += 1
     } else {
-      this.stop()
+      this.pause()
       this.pc = -1
       console.log('No more instructions.')
     }
@@ -501,38 +501,40 @@ class CDGPlayer {
   play () {
     if (!this.frameId && this.instructions.length) {
       this.frameId = requestAnimationFrame(this.update.bind(this))
-      this.lastTimestamp = performance.now()
+      this.refTimestamp = performance.now()
     }
   }
 
-  stop () {
+  pause () {
     cancelAnimationFrame(this.frameId)
     this.frameId = null
   }
 
-  sync (ms) {
-    this.lastSyncPos = ms
-    this.lastTimestamp = performance.now()
+  syncTime (s) {
+    this.lastSyncPos = s
+    this.refTimestamp = performance.now()
   }
 
   update (timestamp) {
     if (this.pc === -1) return
 
-    // go ahead and request the next frame
-    this.frameId = requestAnimationFrame(this.update.bind(this))
+    const delta = (timestamp - this.refTimestamp) / 1000
 
     if (this.lastSyncPos) {
       // last known audio position + time delta
-      this.pos = this.lastSyncPos + (timestamp - this.lastTimestamp)
+      this.pos = this.lastSyncPos + delta
     } else {
       // time delta only (unsynced)
-      this.pos += timestamp - this.lastTimestamp
-      this.lastTimestamp = timestamp
+      this.pos += delta
+      this.refTimestamp = timestamp
     }
+
+    // go ahead and request the next frame
+    this.frameId = requestAnimationFrame(this.update.bind(this))
 
     // determine packet we should be at, based on spec
     // of 4 packets per sector @ 75 sectors per second
-    const newPc = Math.floor(4 * 75 * (this.pos / 1000))
+    const newPc = Math.floor(4 * 75 * this.pos)
     const ffAmt = newPc - this.pc
 
     if (ffAmt <= 0) return

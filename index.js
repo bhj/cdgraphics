@@ -448,7 +448,7 @@ class CDGPlayer {
     }
 
     if (opts.onBackgroundChange && typeof opts.onBackgroundChange !== 'function') {
-      throw new Error(`'onBackgroundChange' option must be a function`)
+      throw new Error('option "onBackgroundChange" must be a function')
     }
 
     this.canvas = canvas

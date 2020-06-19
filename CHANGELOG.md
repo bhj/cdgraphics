@@ -3,7 +3,7 @@
 **Breaking changes/migrating from 2.x:**
 - Internet Explorer, Chrome < v30, and Firefox < v51 are no longer officially supported (removed vendor prefixes for [`imageSmoothingEnabled`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/imageSmoothingEnabled))
 - The `stop()` method has been renamed `pause()`
-- The `sync()` method has been replaced with `syncTime()` which expects a time in seconds (instead of ms)
+- The `sync()` method has been replaced with `syncTime()` and now expects a time in seconds (instead of ms)
 
 **Improved:**
 - Graphics now scale fluidly with the canvas instead of at fixed increments

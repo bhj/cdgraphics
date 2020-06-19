@@ -1,4 +1,4 @@
-## v3.0.0 (TBD)
+## v3.0.0 (June 18, 2020)
 
 **Breaking changes/migrating from 2.x:**
 - Internet Explorer, Chrome < v30, and Firefox < v51 are no longer officially supported (removed vendor prefixes for [`imageSmoothingEnabled`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/imageSmoothingEnabled))

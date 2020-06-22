@@ -453,6 +453,8 @@ class CDGPlayer {
 
     this.canvas = canvas
     this.opts = opts
+    this.context = new CDGContext(this.canvas, this.opts)
+
     this.init()
   }
 
@@ -476,7 +478,6 @@ class CDGPlayer {
     this.init()
 
     this.instructions = CDGParser.parseData(data)
-    this.context = new CDGContext(this.canvas, this.opts)
     this.pc = 0
   }
 

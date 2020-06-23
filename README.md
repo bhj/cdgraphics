@@ -55,10 +55,6 @@ fetch('your_file.cdg')
 Methods
 -------
 
-### `forceTransparent(boolean)`
-
-Enables or disables the `forceTransparent` option (see Usage above) while playing or paused.
-
 ### `load(array)`
 
 Takes an array of bytes and parses the CD+G instructions synchronously. This must be done before calling `play`. Here's an example using fetch:

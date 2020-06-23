@@ -458,11 +458,6 @@ class CDGPlayer {
     this.init()
   }
 
-  forceTransparent (val) {
-    this.context.forceTransparent = val
-    this.context.renderFrame()
-  }
-
   init () {
     this.frameId = null
     this.instructions = []

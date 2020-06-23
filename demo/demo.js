@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const checkbox = document.getElementById('force_transparent')
 
   checkbox.addEventListener('change', (e) => {
-    cdg.forceTransparent(e.target.checked)
+    cdg.setOptions({ forceTransparent: e.target.checked })
   })
 
   // download and load cdg file

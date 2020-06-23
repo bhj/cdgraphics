@@ -25,7 +25,7 @@ const PACKET_SIZE = 24
 *
 ************************************************/
 class CDGContext {
-  constructor (userCanvas, { forceTransparent = false } = {}) {
+  constructor (userCanvas) {
     // visible canvas
     this.userCanvas = userCanvas
     this.userCanvasCtx = userCanvas.getContext('2d')
@@ -36,7 +36,6 @@ class CDGContext {
     this.canvas.height = this.HEIGHT
     this.ctx = this.canvas.getContext('2d')
     this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
-    this.forceTransparent = !!forceTransparent
 
     this.init()
   }
@@ -101,13 +100,22 @@ class CDGContext {
       this.userCanvasCtx.clearRect(0, 0, this.WIDTH * scale, this.HEIGHT * scale)
     }
 
-    // In at least Chrome and Firefox, this gets re-enabled each time the
-    // canvas width or height gets set, even if set to the same value, so
-    // rather than trying to detect a resize, just disable on each frame
+    // these get reset when the canvas is resized
     this.userCanvasCtx.imageSmoothingEnabled = false
+    this.userCanvasCtx.shadowBlur = this.shadowBlur
+    this.userCanvasCtx.shadowColor = this.shadowColor
+    this.userCanvasCtx.shadowOffsetX = this.shadowOffsetX
+    this.userCanvasCtx.shadowOffsetY = this.shadowOffsetY
 
-    // copy to destination canvas and scale
-    this.userCanvasCtx.drawImage(this.canvas, 0, 0, this.WIDTH * scale, this.HEIGHT * scale)
+    // copy and scale to visible canvas, shrinking to
+    // prevent any shadow from being clipped
+    this.userCanvasCtx.drawImage(
+      this.canvas,
+      this.shadowBlur - this.shadowOffsetX,
+      this.shadowBlur - this.shadowOffsetY,
+      (this.WIDTH * scale) - this.shadowBlur * 2,
+      (this.HEIGHT * scale) - this.shadowBlur * 2
+    )
   }
 }
 
@@ -444,17 +452,13 @@ CDGParser.BY_TYPE[CDG_TILE_BLOCK_XOR] = CDGTileBlockXORInstruction
 class CDGPlayer {
   constructor (canvas, opts = {}) {
     if (!(canvas instanceof HTMLCanvasElement)) {
-      throw new Error('Must be instantiated with a canvas element')
-    }
-
-    if (opts.onBackgroundChange && typeof opts.onBackgroundChange !== 'function') {
-      throw new Error('option "onBackgroundChange" must be a function')
+      throw new Error('Must be instantiated with an HTMLCanvasElement')
     }
 
     this.canvas = canvas
-    this.opts = opts
-    this.context = new CDGContext(this.canvas, this.opts)
+    this.ctx = new CDGContext(this.canvas)
 
+    this.setOptions(opts)
     this.init()
   }
 
@@ -478,7 +482,7 @@ class CDGPlayer {
 
   step () {
     if (this.pc >= 0 && this.pc < this.instructions.length) {
-      this.instructions[this.pc].execute(this.context)
+      this.instructions[this.pc].execute(this.ctx)
       this.pc += 1
     } else {
       this.pause()
@@ -504,6 +508,27 @@ class CDGPlayer {
   pause () {
     cancelAnimationFrame(this.frameId)
     this.frameId = null
+  }
+
+  redraw () {
+    this.ctx.renderFrame()
+  }
+
+  setOptions ({
+    forceTransparent = this.ctx.forceTransparent || false,
+    onBackgroundChange = this.onBackgroundChange || undefined,
+    shadowBlur = this.ctx.shadowBlur || 0,
+    shadowColor = this.ctx.shadowColor || 'rgba(0,0,0,1)',
+    shadowOffsetX = this.ctx.shadowOffsetX || 0,
+    shadowOffsetY = this.ctx.shadowOffsetY || 0
+  } = {}) {
+    if (onBackgroundChange && typeof onBackgroundChange !== 'function') {
+      throw new Error('"onBackgroundChange" option must be a function')
+    }
+
+    this.onBackgroundChange = onBackgroundChange
+    Object.assign(this.ctx, { forceTransparent, shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY })
+    this.ctx.renderFrame() // redraw
   }
 
   syncTime (s) {
@@ -536,15 +561,15 @@ class CDGPlayer {
     if (ffAmt <= 0) return
 
     this.fastForward(ffAmt)
-    this.context.renderFrame()
+    this.ctx.renderFrame()
 
-    if (this.opts.onBackgroundChange) {
-      const cur = this.context.backgroundRGBA
+    if (this.onBackgroundChange) {
+      const cur = this.ctx.backgroundRGBA
       const last = this.lastBackground
 
       if (cur && !(last && cur.every((val, i) => val === last[i]))) {
         this.lastBackground = cur
-        this.opts.onBackgroundChange(cur)
+        this.onBackgroundChange(cur)
       }
     }
   }

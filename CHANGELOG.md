@@ -1,3 +1,11 @@
+## TBD
+
+**Breaking changes/migrating from 3.x:**
+- The `forceTransparent()` method has been removed. The option can be changed using `setOptions()` instead.
+
+**Improved:**
+- Added shadow support
+
 ## v3.0.0 (June 18, 2020)
 
 **Breaking changes/migrating from 2.x:**

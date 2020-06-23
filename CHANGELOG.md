@@ -5,6 +5,7 @@
 
 **Improved:**
 - Added shadow support
+- Significantly reduced CPU usage during idle frames
 
 ## v3.0.0 (June 18, 2020)
 

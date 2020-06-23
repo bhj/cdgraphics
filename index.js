@@ -140,7 +140,13 @@ class CDGInstruction {
 * NOOP
 *
 ************************************************/
-class CDGNoopInstruction extends CDGInstruction { }
+class CDGNoopInstruction {
+  constructor () {}
+
+  execute () {
+    return false // not dirty
+  }
+}
 
 /************************************************
 *
@@ -470,6 +476,7 @@ class CDGPlayer {
     this.lastSyncPos = null // (s)
     this.refTimestamp = null // DOMHighResTimeStamp (ms)
     this.lastBackground = null
+    this.isDirty = false
   }
 
   load (data) {
@@ -482,7 +489,11 @@ class CDGPlayer {
 
   step () {
     if (this.pc >= 0 && this.pc < this.instructions.length) {
-      this.instructions[this.pc].execute(this.ctx)
+      // set dirty flag if work was done (and flag isn't already set)
+      if (this.instructions[this.pc].execute(this.ctx) !== false && !this.isDirty) {
+        this.isDirty = true
+      }
+
       this.pc += 1
     } else {
       this.pause()
@@ -559,9 +570,12 @@ class CDGPlayer {
     const ffAmt = newPc - this.pc
 
     if (ffAmt <= 0) return
-
     this.fastForward(ffAmt)
-    this.ctx.renderFrame()
+
+    if (this.isDirty) {
+      this.ctx.renderFrame()
+      this.isDirty = false
+    }
 
     if (this.onBackgroundChange) {
       const cur = this.ctx.backgroundRGBA

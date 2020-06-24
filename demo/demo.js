@@ -4,27 +4,30 @@ const cdgUrl = 'YOUR_CDG_FILE.cdg'
 document.addEventListener('DOMContentLoaded', () => {
   const audio = document.getElementById('audio')
   const canvas = document.getElementById('canvas')
+  const CDGraphics = require('../index.js')
 
-  const CDGPlayer = require('../index.js')
-  const cdg = new CDGPlayer(canvas, {
+  const cdg = new CDGraphics(canvas, {
+    forceKey: true,
     onBackgroundChange: color => {
       console.log('onBackgroundChange', color)
     }
   })
 
   // link to audio events
-  audio.addEventListener('play', () => { cdg.play() })
-  audio.addEventListener('pause', () => { cdg.pause() })
-  audio.addEventListener('timeupdate', () => {
-    cdg.syncTime(audio.currentTime)
-  })
+  audio.addEventListener('play', () => cdg.play())
+  audio.addEventListener('pause', () => cdg.pause())
+  audio.addEventListener('timeupdate', () => cdg.syncTime(audio.currentTime))
 
-  // checkbox for forceTransparent
-  const checkbox = document.getElementById('force_transparent')
+  // options UI
+  const forceKeyCheckbox = document.getElementById('force_transparent')
+  const shadowBlurRange = document.getElementById('shadowBlur')
+  const shadowOffsetXRange = document.getElementById('shadowOffsetX')
+  const shadowOffsetYRange = document.getElementById('shadowOffsetY')
 
-  checkbox.addEventListener('change', (e) => {
-    cdg.setOptions({ forceTransparent: e.target.checked })
-  })
+  forceKeyCheckbox.addEventListener('change', (e) => cdg.setOptions({ forceKey: e.target.checked }))
+  shadowBlurRange.addEventListener('change', (e) => cdg.setOptions({ shadowBlur: e.target.value }))
+  shadowOffsetXRange.addEventListener('change', (e) => cdg.setOptions({ shadowOffsetX: e.target.value }))
+  shadowOffsetYRange.addEventListener('change', (e) => cdg.setOptions({ shadowOffsetY: e.target.value }))
 
   // download and load cdg file
   fetch(cdgUrl)

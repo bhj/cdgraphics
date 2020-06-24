@@ -1,10 +1,10 @@
 ## TBD
 
 **Breaking changes/migrating from 3.x:**
-- The `forceTransparent()` method has been removed. The option can be changed using `setOptions()` instead.
+- The `forceTransparent` option has been renamed `forceKey`. Subsequently, the `forceTransparent()` method has been removed, and `forceKey` can now be set with `setOptions()`.
 
 **Improved:**
-- Added shadow support
+- Added shadow effects support
 - Significantly reduced CPU usage during idle frames
 
 ## v3.0.0 (June 18, 2020)

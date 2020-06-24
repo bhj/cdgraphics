@@ -13,10 +13,22 @@
     <div id="app">
       <canvas id="canvas" width="600" height="432"></canvas>
       <audio id="audio" controls></audio>
-
+      <br />
       <label style="background: white;">
-        <input type="checkbox" id="force_transparent" value="1" />
-        Force transparent background
+        <input type="checkbox" id="force_transparent" value="1" checked />
+        Force key
+      </label><br /><br />
+      <label style="background: white;">
+        <input type="range" id="shadowBlur" min="0" max="32" value="0" />
+        shadowBlur
+      </label><br />
+      <label style="background: white;">
+        <input type="range" id="shadowOffsetX" min="0" max="32" value="0" />
+        shadowOffsetX
+      </label><br />
+      <label style="background: white;">
+        <input type="range" id="shadowOffsetY" min="0" max="32" value="0" />
+        shadowOffsetY
       </label>
     </div>
     <script src="bundle.js"></script>

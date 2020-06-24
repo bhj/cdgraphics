@@ -56,12 +56,12 @@ class CDGContext {
 
   get backgroundRGBA () {
     if (this.bgColor === null) {
-      return [0, 0, 0, this.forceTransparent ? 0 : 1]
+      return [0, 0, 0, this.forceKey ? 0 : 1]
     }
 
     return [
       ...this.clut[this.bgColor], // rgb
-      this.bgColor === this.keyColor || this.forceTransparent ? 0 : 1, // a
+      this.bgColor === this.keyColor || this.forceKey ? 0 : 1, // a
     ]
   }
 
@@ -83,7 +83,7 @@ class CDGContext {
         const colorIndex = this.pixels[pixelIndex]
         const [r, g, b] = this.clut[colorIndex]
         const isTransparent = colorIndex === this.keyColor ||
-          (this.forceTransparent && (colorIndex === this.bgColor || this.bgColor == null))
+          (this.forceKey && (colorIndex === this.bgColor || this.bgColor == null))
 
         // Set the rgba values in the image data
         this.imageData.data[offset] = r
@@ -524,7 +524,7 @@ class CDGPlayer {
   }
 
   setOptions ({
-    forceTransparent = this.ctx.forceTransparent || false,
+    forceKey = this.ctx.forceKey || false,
     onBackgroundChange = this.onBackgroundChange || undefined,
     shadowBlur = this.ctx.shadowBlur || 0,
     shadowColor = this.ctx.shadowColor || 'rgba(0,0,0,1)',
@@ -536,7 +536,7 @@ class CDGPlayer {
     }
 
     this.onBackgroundChange = onBackgroundChange
-    Object.assign(this.ctx, { forceTransparent, shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY })
+    Object.assign(this.ctx, { forceKey, shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY })
     this.ctx.renderFrame() // redraw
   }
 

@@ -141,8 +141,6 @@ class CDGInstruction {
 *
 ************************************************/
 class CDGNoopInstruction {
-  constructor () {}
-
   execute () {
     return false // not dirty
   }

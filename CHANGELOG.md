@@ -1,7 +1,7 @@
-## TBD
+## v4.0.0 (June 23, 2020)
 
 **Breaking changes/migrating from 3.x:**
-- The `forceTransparent` option has been renamed `forceKey`. Subsequently, the `forceTransparent()` method has been removed, and `forceKey` can now be set with `setOptions()`.
+- The `forceTransparent` option has been renamed `forceKey`. Subsequently, the `forceTransparent()` method has been removed, and `forceKey` can be set with the new `setOptions()` method.
 
 **Improved:**
 - Added shadow effects support

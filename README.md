@@ -4,7 +4,7 @@ cdgraphics
 A [CD+Graphics (CD+G)](https://en.wikipedia.org/wiki/CD%2BG) implementation in JavaScript that draws to an HTML5 canvas. It's based on the [player by Luke Tucker](https://github.com/ltucker/html5_karaoke) with improvements from [Keith McKnight's fork](https://github.com/kmck/karaoke).
 
 * 60fps rendering with [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame)
-* Audio synchronization with `<audio>` element's [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime)
+* Audio synchronization with [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime)
 * Optional background keying (transparency) and shadow effects
 * Supports callback for CD+G title background color changes
 * Supports rewind and random seek
@@ -98,8 +98,8 @@ To run the demo and see how it all comes together:
 1. Clone the repo
 2. Place your audio and .cdg file in the `demo` folder
 3. Update lines 1 and 2 of `demo/demo.js` with those filenames
-4. `npm i`
-5. `npm run demo`
+4. `$ npm i`
+5. `$ npm run demo`
 6. Browse to `http://localhost:8080` (the demo is served by webpack-dev-server)
 
 Resources

@@ -59,9 +59,9 @@ fetch(cdgFileUrl)
 
 ### `render([number])`
 
-Renders the frame at the given playback position (in seconds). If no value is provided, the canvas will be re-painted with the last rendered frame.
+Renders the frame at the given playback position (in seconds). Calling without a parameter will re-paint the last-rendered frame to the canvas.
 
-This method is designed to be used with [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) and the [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime) property of an HTMLMediaElement (usually an `<audio>` element). The following  excerpt demonstrates a basic render loop:
+This method is designed to be used with [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) and the [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime) property of an HTMLMediaElement (usually an `<audio>` element). The following excerpt demonstrates a basic render loop:
 
  ```js
 let frameId
@@ -77,13 +77,14 @@ const pause = () => cancelAnimationFrame(frameId)
 audio.addEventListener('play', play)
 audio.addEventListener('pause', pause)
 audio.addEventListener('ended', pause)
+audio.addEventListener('seeked', () => cdg.render(audio.currentTime))
  ```
 
-See [the demo code](https://github.com/bhj/cdgraphics/blob/master/demo/demo.js) for a more complete example.
+See [the demo code](https://github.com/bhj/cdgraphics/blob/master/demo/demo.js) for a complete example.
 
 ### `setOptions(object)`
 
-Sets one or more [options](#options) on-the-fly and re-renders.
+Sets one or more [options](#options) and re-renders.
 
  ```js
  // whether playing or paused...

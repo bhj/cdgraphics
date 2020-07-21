@@ -9,7 +9,6 @@ A [CD+Graphics (CD+G)](https://en.wikipedia.org/wiki/CD%2BG) implementation in J
 * Supports callback for CD+G title background color changes
 * Supports rewind and random seek
 * ES2015+ with no dependencies
-* Not designed for server-side rendering
 
 Installation
 ------------

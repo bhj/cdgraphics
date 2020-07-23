@@ -1,3 +1,9 @@
+## v5.0.0 (beta)
+
+**Breaking changes/migrating from 4.x:**
+
+v5 has a new, simple API. Instead of `play()`, `pause()` and `syncTime()`, you now control the [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) loop and `render()` a frame at the [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime). This also enables full rewind/random seek support. See the README for more on using `render()`.
+
 ## v4.0.0 (June 23, 2020)
 
 **Breaking changes/migrating from 3.x:**

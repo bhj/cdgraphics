@@ -35,7 +35,6 @@ class CDGContext {
     this.canvas.width = this.WIDTH
     this.canvas.height = this.HEIGHT
     this.ctx = this.canvas.getContext('2d')
-    this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
 
     this.init()
   }
@@ -48,6 +47,7 @@ class CDGContext {
     this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
     this.pixels = new Array(this.WIDTH * this.HEIGHT).fill(0)
     this.buffer = new Array(this.WIDTH * this.HEIGHT).fill(0)
+    this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
   }
 
   setCLUTEntry (index, r, g, b) {
@@ -65,37 +65,13 @@ class CDGContext {
     ]
   }
 
-  renderFrame () {
-    const [left, top, right, bottom] = [0, 0, this.WIDTH, this.HEIGHT]
+  paint () {
     const scale = Math.min(
       this.userCanvas.clientWidth / this.WIDTH,
       this.userCanvas.clientHeight / this.HEIGHT,
     )
 
-    for (let x = left; x < right; x++) {
-      for (let y = top; y < bottom; y++) {
-        // The offset is where we draw the pixel in the raster data
-        const offset = 4 * (x + (y * this.WIDTH))
-        // Respect the horizontal and vertical offsets for grabbing the pixel color
-        const px = ((x - this.hOffset) + this.WIDTH) % this.WIDTH
-        const py = ((y - this.vOffset) + this.HEIGHT) % this.HEIGHT
-        const pixelIndex = px + (py * this.WIDTH)
-        const colorIndex = this.pixels[pixelIndex]
-        const [r, g, b] = this.clut[colorIndex]
-        const isTransparent = colorIndex === this.keyColor ||
-          (this.forceKey && (colorIndex === this.bgColor || this.bgColor == null))
-
-        // Set the rgba values in the image data
-        this.imageData.data[offset] = r
-        this.imageData.data[offset + 1] = g
-        this.imageData.data[offset + 2] = b
-        this.imageData.data[offset + 3] = isTransparent ? 0x00 : 0xff
-      }
-    }
-
-    this.ctx.putImageData(this.imageData, 0, 0)
-
-    // clear destination canvas first if there's transparency
+    // clear destination canvas if there's transparency
     if (this.keyColor >= 0) {
       this.userCanvasCtx.clearRect(0, 0, this.WIDTH * scale, this.HEIGHT * scale)
     }
@@ -116,6 +92,34 @@ class CDGContext {
       (this.WIDTH * scale) - this.shadowBlur * 2,
       (this.HEIGHT * scale) - this.shadowBlur * 2
     )
+  }
+
+  renderFrame () {
+    const [left, top, right, bottom] = [0, 0, this.WIDTH, this.HEIGHT]
+
+    for (let x = left; x < right; x++) {
+      for (let y = top; y < bottom; y++) {
+        // The offset is where we draw the pixel in the raster data
+        const offset = 4 * (x + (y * this.WIDTH))
+        // Respect the horizontal and vertical offsets for grabbing the pixel color
+        const px = ((x - this.hOffset) + this.WIDTH) % this.WIDTH
+        const py = ((y - this.vOffset) + this.HEIGHT) % this.HEIGHT
+        const pixelIndex = px + (py * this.WIDTH)
+        const colorIndex = this.pixels[pixelIndex]
+        const [r, g, b] = this.clut[colorIndex]
+        const isKeyColor = colorIndex === this.keyColor ||
+          (this.forceKey && (colorIndex === this.bgColor || this.bgColor == null))
+
+        // Set the rgba values in the image data
+        this.imageData.data[offset] = r
+        this.imageData.data[offset + 1] = g
+        this.imageData.data[offset + 2] = b
+        this.imageData.data[offset + 3] = isKeyColor ? 0x00 : 0xff
+      }
+    }
+
+    this.ctx.putImageData(this.imageData, 0, 0)
+    this.paint()
   }
 }
 
@@ -142,7 +146,7 @@ class CDGInstruction {
 ************************************************/
 class CDGNoopInstruction {
   execute () {
-    return false // not dirty
+    return false // indicate no work was performed
   }
 }
 
@@ -418,20 +422,6 @@ class CDGParser {
 
     return new CDGNoopInstruction()
   }
-
-  static parseData (bytes) {
-    const instructions = []
-
-    for (let offset = 0; offset < bytes.length; offset += PACKET_SIZE) {
-      const instruction = this.parseOne(bytes, offset)
-
-      if (instruction != null) {
-        instructions.push(instruction)
-      }
-    }
-
-    return instructions
-  }
 }
 
 CDGParser.COMMAND_MASK = 0x3F
@@ -461,66 +451,69 @@ class CDGPlayer {
 
     this.canvas = canvas
     this.ctx = new CDGContext(this.canvas)
-
     this.setOptions(opts)
-    this.init()
   }
 
   init () {
-    this.frameId = null
     this.instructions = []
-    this.pc = -1 // current packet
-    this.pos = 0 // current position (s)
-    this.lastSyncPos = null // (s)
-    this.refTimestamp = null // DOMHighResTimeStamp (ms)
     this.lastBackground = null
     this.isDirty = false
+    this.pc = -1
   }
 
-  load (data) {
-    this.pause()
+  load (bytes) {
     this.init()
 
-    this.instructions = CDGParser.parseData(data)
-    this.pc = 0
+    for (let offset = 0; offset < bytes.length; offset += PACKET_SIZE) {
+      const instruction = CDGParser.parseOne(bytes, offset)
+      if (instruction != null) this.instructions.push(instruction)
+    }
   }
 
-  step () {
-    if (this.pc >= 0 && this.pc < this.instructions.length) {
-      // set dirty flag if work was done (and flag isn't already set)
+  render (curTime) {
+    if (typeof curTime === 'undefined') {
+      this.ctx.paint()
+      return
+    } else if (isNaN(curTime) || curTime < 0) throw new Error(`Invalid time: ${curTime}`)
+
+    // determine packet we should be at, based on spec
+    // of 4 packets per sector @ 75 sectors per second
+    const newPc = Math.floor(4 * 75 * curTime)
+
+    if (this.pc === newPc) {
+      // already rendered this but we'll try to help out and re-paint
+      this.ctx.paint()
+      return
+    } else if (this.pc > newPc) {
+      // rewind kindly
+      this.pc = -1
+      this.ctx.init()
+    }
+
+    // update CDG state
+    while (this.pc < newPc && this.pc < this.instructions.length - 1) {
+      this.pc += 1
+
+      // set dirty flag if work was performed (and flag isn't already set)
       if (this.instructions[this.pc].execute(this.ctx) !== false && !this.isDirty) {
         this.isDirty = true
       }
-
-      this.pc += 1
-    } else {
-      this.pause()
-      this.pc = -1
-      console.log('No more instructions.')
     }
-  }
 
-  fastForward (count) {
-    const max = this.pc + count
-    while (this.pc >= 0 && this.pc < max) {
-      this.step()
+    if (this.isDirty) {
+      this.ctx.renderFrame()
+      this.isDirty = false
     }
-  }
 
-  play () {
-    if (!this.frameId && this.instructions.length) {
-      this.frameId = requestAnimationFrame(this.update.bind(this))
-      this.refTimestamp = performance.now()
+    if (this.onBackgroundChange) {
+      const cur = this.ctx.backgroundRGBA
+      const last = this.lastBackground
+
+      if (cur && !(last && cur.every((val, i) => val === last[i]))) {
+        this.lastBackground = cur
+        this.onBackgroundChange(cur)
+      }
     }
-  }
-
-  pause () {
-    cancelAnimationFrame(this.frameId)
-    this.frameId = null
-  }
-
-  redraw () {
-    this.ctx.renderFrame()
   }
 
   setOptions ({
@@ -537,53 +530,7 @@ class CDGPlayer {
 
     this.onBackgroundChange = onBackgroundChange
     Object.assign(this.ctx, { forceKey, shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY })
-    this.ctx.renderFrame() // redraw
-  }
-
-  syncTime (s) {
-    this.lastSyncPos = s
-    this.refTimestamp = performance.now()
-  }
-
-  update (timestamp) {
-    if (this.pc === -1) return
-
-    const delta = (timestamp - this.refTimestamp) / 1000
-
-    if (this.lastSyncPos) {
-      // last known audio position + time delta
-      this.pos = this.lastSyncPos + delta
-    } else {
-      // time delta only (unsynced)
-      this.pos += delta
-      this.refTimestamp = timestamp
-    }
-
-    // go ahead and request the next frame
-    this.frameId = requestAnimationFrame(this.update.bind(this))
-
-    // determine packet we should be at, based on spec
-    // of 4 packets per sector @ 75 sectors per second
-    const newPc = Math.floor(4 * 75 * this.pos)
-    const ffAmt = newPc - this.pc
-
-    if (ffAmt <= 0) return
-    this.fastForward(ffAmt)
-
-    if (this.isDirty) {
-      this.ctx.renderFrame()
-      this.isDirty = false
-    }
-
-    if (this.onBackgroundChange) {
-      const cur = this.ctx.backgroundRGBA
-      const last = this.lastBackground
-
-      if (cur && !(last && cur.every((val, i) => val === last[i]))) {
-        this.lastBackground = cur
-        this.onBackgroundChange(cur)
-      }
-    }
+    this.ctx.renderFrame()
   }
 }
 

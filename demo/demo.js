@@ -5,21 +5,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const audio = document.getElementById('audio')
   const canvas = document.getElementById('canvas')
   const CDGraphics = require('../index.js')
+  let frameId
 
   const cdg = new CDGraphics(canvas, {
-    forceKey: true,
     onBackgroundChange: color => {
       console.log('onBackgroundChange', color)
     }
   })
 
-  // link to audio events
-  audio.addEventListener('play', () => cdg.play())
-  audio.addEventListener('pause', () => cdg.pause())
-  audio.addEventListener('timeupdate', () => cdg.syncTime(audio.currentTime))
+  // methods for render loop
+  const play = () => {
+    frameId = requestAnimationFrame(play)
+    cdg.render(audio.currentTime)
+  }
+  const pause = () => cancelAnimationFrame(frameId)
 
-  // options UI
-  const forceKeyCheckbox = document.getElementById('force_transparent')
+  // link to audio events (depending on your app, not all are strictly necessary)
+  audio.addEventListener('play', play)
+  audio.addEventListener('pause', pause)
+  audio.addEventListener('ended', pause)
+  audio.addEventListener('seeked', () => cdg.render(audio.currentTime))
+
+  // demo options UI
+  const forceKeyCheckbox = document.getElementById('forceKey')
   const shadowBlurRange = document.getElementById('shadowBlur')
   const shadowOffsetXRange = document.getElementById('shadowOffsetX')
   const shadowOffsetYRange = document.getElementById('shadowOffsetY')

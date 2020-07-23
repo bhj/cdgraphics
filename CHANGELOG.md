@@ -1,4 +1,4 @@
-## v5.0.0 (beta)
+## v5.0.0 (July 23, 2020)
 
 **Breaking changes/migrating from 4.x:**
 

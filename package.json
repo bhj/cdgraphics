@@ -1,6 +1,6 @@
 {
   "name": "cdgraphics",
-  "version": "5.0.0-beta.1",
+  "version": "5.0.0",
   "description": "CD+Graphics (CD+G) JS/HTML5 player",
   "repository": {
     "type": "git",
@@ -18,10 +18,9 @@
     "lyrics",
     "karaoke"
   ],
-  "author": "Brandon Jones",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^7.4.0",
+    "eslint": "^7.5.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-node": "^11.1.0",

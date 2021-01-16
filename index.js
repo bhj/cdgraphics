@@ -19,10 +19,8 @@ const CDG_DATA = 4
 const PACKET_SIZE = 24
 
 /************************************************
-*
 * CDGContext represents a specific state of
 * the screen, clut and other CDG variables.
-*
 ************************************************/
 class CDGContext {
   constructor (userCanvas) {
@@ -131,18 +129,8 @@ CDGContext.prototype.DISPLAY_BOUNDS = [6, 12, 294, 204]
 CDGContext.prototype.TILE_WIDTH = 6
 CDGContext.prototype.TILE_HEIGHT = 12
 
-class CDGInstruction {
-  constructor (bytes) {
-    this.bytes = bytes
-  }
-
-  execute (context) { }
-}
-
 /************************************************
-*
 * NOOP
-*
 ************************************************/
 class CDGNoopInstruction {
   execute () {
@@ -151,14 +139,10 @@ class CDGNoopInstruction {
 }
 
 /************************************************
-*
 * MEMORY_PRESET
-*
 ************************************************/
-class CDGMemoryPresetInstruction extends CDGInstruction {
+class CDGMemoryPresetInstruction {
   constructor (bytes) {
-    super(bytes)
-
     this.color = bytes[CDG_DATA] & 0x0F
     this.repeat = bytes[CDG_DATA + 1] & 0x0F
   }
@@ -170,14 +154,10 @@ class CDGMemoryPresetInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * BORDER_PRESET
-*
 ************************************************/
-class CDGBorderPresetInstruction extends CDGInstruction {
+class CDGBorderPresetInstruction {
   constructor (bytes) {
-    super(bytes)
-
     this.color = bytes[CDG_DATA] & 0x0F
   }
 
@@ -203,14 +183,10 @@ class CDGBorderPresetInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * TILE_BLOCK
-*
 ************************************************/
-class CDGTileBlockInstruction extends CDGInstruction {
+class CDGTileBlockInstruction {
   constructor (bytes) {
-    super(bytes)
-
     // some players check bytes[doff+1] & 0x20 and ignores if it is set (?)
     this.colors = [bytes[CDG_DATA] & 0x0F, bytes[CDG_DATA + 1] & 0x0F]
     this.row = bytes[CDG_DATA + 2] & 0x1F
@@ -244,9 +220,7 @@ class CDGTileBlockInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * TILE_BLOCK_XOR
-*
 ************************************************/
 class CDGTileBlockXORInstruction extends CDGTileBlockInstruction {
   op ({ pixels }, offset, color) {
@@ -255,14 +229,10 @@ class CDGTileBlockXORInstruction extends CDGTileBlockInstruction {
 }
 
 /************************************************
-*
 * SCROLL_PRESET
-*
 ************************************************/
-class CDGScrollPresetInstruction extends CDGInstruction {
+class CDGScrollPresetInstruction {
   constructor (bytes) {
-    super(bytes)
-
     this.color = bytes[CDG_DATA] & 0x0F
 
     const hScroll = bytes[CDG_DATA + 1] & 0x3F
@@ -320,9 +290,7 @@ class CDGScrollPresetInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * SCROLL_COPY
-*
 ************************************************/
 class CDGScrollCopyInstruction extends CDGScrollPresetInstruction {
   getPixel ({ WIDTH, HEIGHT, pixels }, offx, offy) {
@@ -333,13 +301,10 @@ class CDGScrollCopyInstruction extends CDGScrollPresetInstruction {
 }
 
 /************************************************
-*
 * SET_KEY_COLOR
-*
 ************************************************/
-class CDGSetKeyColorInstruction extends CDGInstruction {
+class CDGSetKeyColorInstruction {
   constructor (bytes) {
-    super(bytes)
     this.index = bytes[CDG_DATA] & 0x0F
   }
 
@@ -349,14 +314,10 @@ class CDGSetKeyColorInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * LOAD_CLUT_LOW
-*
 ************************************************/
-class CDGLoadCLUTLowInstruction extends CDGInstruction {
+class CDGLoadCLUTLowInstruction {
   constructor (bytes) {
-    super(bytes)
-
     this.colors = Array(8)
 
     for (let i = 0; i < 8; i++) {
@@ -386,18 +347,14 @@ class CDGLoadCLUTLowInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * LOAD_CLUT_HI
-*
 ************************************************/
 class CDGLoadCLUTHighInstruction extends CDGLoadCLUTLowInstruction {
   get clutOffset () { return 8 }
 }
 
 /************************************************
-*
 * CDGParser
-*
 ************************************************/
 class CDGParser {
   static parse (bytes) {
@@ -435,9 +392,7 @@ CDGParser.BY_TYPE[CDG_LOAD_CLUT_HI] = CDGLoadCLUTHighInstruction
 CDGParser.BY_TYPE[CDG_TILE_BLOCK_XOR] = CDGTileBlockXORInstruction
 
 /************************************************
-*
 * CDGPlayer
-*
 ************************************************/
 class CDGPlayer {
   constructor (canvas, opts = {}) {

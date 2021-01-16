@@ -41,10 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetch(cdgUrl)
     .then(response => response.arrayBuffer())
     .then(buffer => {
-      // arrayBuffer to Uint8Array
-      cdg.load(new Uint8Array(buffer))
-
-      // start loading audio
-      audio.src = audioUrl
+      cdg.load(buffer)
+      audio.src = audioUrl // pre-load audio
     })
 })

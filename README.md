@@ -39,23 +39,21 @@ const cdg = new CDGraphics(canvas, { forceKey: true }) // force background trans
 | shadowOffsetX | number | [CanvasRenderingContext2D.shadowOffsetX](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/shadowOffsetX) | `0` |
 | shadowOffsetY | number | [CanvasRenderingContext2D.shadowOffsetY](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/shadowOffsetY) | `0` |
 
-**Note:** When using shadow* options, graphics will render smaller and/or offset to fit the canvas as needed to avoid clipping the shadow.
+**Note:** When using shadow* options, graphics may render smaller and/or offset to fit the canvas as needed to avoid clipping the shadow.
 
-### `.load(array)`
+### `.load(buffer)`
 
-Loads an array of bytes and parses the CD+G instructions. This must be done before calling `render()`.
+Loads a CD+G file. Expects an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), which can be had via the [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) of a [fetch()](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 
 ```js
 fetch(cdgFileUrl)
   .then(response => response.arrayBuffer())
-  .then(buffer => {
-    cdg.load(new Uint8Array(buffer))
-  })
+  .then(buffer => cdg.load(buffer))
 ```
 
 ### `.render([number])`
 
-Renders the frame at the given playback position (in seconds). Calling without a parameter will re-paint the last-rendered frame to the canvas.
+Renders the frame at the given playback position (in seconds). Calling without a parameter will re-paint the last-rendered frame to the canvas. You must `load()` a CD+G file (see above) before calling `render()`.
 
 This method is designed to be used with [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) and the [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime) property of an HTMLMediaElement (usually an `<audio>` element). The following excerpt shows a basic render loop:
 

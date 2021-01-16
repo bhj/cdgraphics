@@ -132,8 +132,8 @@ CDGContext.prototype.TILE_WIDTH = 6
 CDGContext.prototype.TILE_HEIGHT = 12
 
 class CDGInstruction {
-  constructor (bytes = [], offset = 0) {
-    this.bytes = bytes.slice(offset, offset + PACKET_SIZE)
+  constructor (bytes) {
+    this.bytes = bytes
   }
 
   execute (context) { }
@@ -156,12 +156,11 @@ class CDGNoopInstruction {
 *
 ************************************************/
 class CDGMemoryPresetInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
+  constructor (bytes) {
+    super(bytes)
 
-    const doff = offset + CDG_DATA
-    this.color = bytes[doff] & 0x0F
-    this.repeat = bytes[doff + 1] & 0x0F
+    this.color = bytes[CDG_DATA] & 0x0F
+    this.repeat = bytes[CDG_DATA + 1] & 0x0F
   }
 
   execute (context) {
@@ -176,10 +175,10 @@ class CDGMemoryPresetInstruction extends CDGInstruction {
 *
 ************************************************/
 class CDGBorderPresetInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
+  constructor (bytes) {
+    super(bytes)
 
-    this.color = bytes[offset + CDG_DATA] & 0x0F
+    this.color = bytes[CDG_DATA] & 0x0F
   }
 
   execute ({ DISPLAY_BOUNDS, WIDTH, pixels, HEIGHT }) {
@@ -209,15 +208,14 @@ class CDGBorderPresetInstruction extends CDGInstruction {
 *
 ************************************************/
 class CDGTileBlockInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
+  constructor (bytes) {
+    super(bytes)
 
-    const doff = offset + CDG_DATA
     // some players check bytes[doff+1] & 0x20 and ignores if it is set (?)
-    this.colors = [bytes[doff] & 0x0F, bytes[doff + 1] & 0x0F]
-    this.row = bytes[doff + 2] & 0x1F
-    this.column = bytes[doff + 3] & 0x3F
-    this.pixels = bytes.slice(doff + 4, doff + 16)
+    this.colors = [bytes[CDG_DATA] & 0x0F, bytes[CDG_DATA + 1] & 0x0F]
+    this.row = bytes[CDG_DATA + 2] & 0x1F
+    this.column = bytes[CDG_DATA + 3] & 0x3F
+    this.pixels = bytes.slice(CDG_DATA + 4, CDG_DATA + 16)
   }
 
   execute (context) {
@@ -262,17 +260,16 @@ class CDGTileBlockXORInstruction extends CDGTileBlockInstruction {
 *
 ************************************************/
 class CDGScrollPresetInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
+  constructor (bytes) {
+    super(bytes)
 
-    const doff = offset + CDG_DATA
-    this.color = bytes[doff] & 0x0F
+    this.color = bytes[CDG_DATA] & 0x0F
 
-    const hScroll = bytes[doff + 1] & 0x3F
+    const hScroll = bytes[CDG_DATA + 1] & 0x3F
     this.hCmd = (hScroll & 0x30) >> 4
     this.hOffset = (hScroll & 0x07)
 
-    const vScroll = bytes[doff + 2] & 0x3F
+    const vScroll = bytes[CDG_DATA + 2] & 0x3F
     this.vCmd = (vScroll & 0x30) >> 4
     this.vOffset = (vScroll & 0x07)
   }
@@ -341,9 +338,9 @@ class CDGScrollCopyInstruction extends CDGScrollPresetInstruction {
 *
 ************************************************/
 class CDGSetKeyColorInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
-    this.index = bytes[offset + CDG_DATA] & 0x0F
+  constructor (bytes) {
+    super(bytes)
+    this.index = bytes[CDG_DATA] & 0x0F
   }
 
   execute (context) {
@@ -357,14 +354,13 @@ class CDGSetKeyColorInstruction extends CDGInstruction {
 *
 ************************************************/
 class CDGLoadCLUTLowInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
+  constructor (bytes) {
+    super(bytes)
 
-    const doff = offset + CDG_DATA
     this.colors = Array(8)
 
     for (let i = 0; i < 8; i++) {
-      const cur = doff + 2 * i
+      const cur = CDG_DATA + 2 * i
 
       let color = (bytes[cur] & 0x3F) << 6
       color += bytes[cur + 1] & 0x3F
@@ -404,16 +400,16 @@ class CDGLoadCLUTHighInstruction extends CDGLoadCLUTLowInstruction {
 *
 ************************************************/
 class CDGParser {
-  static parseOne (bytes, offset) {
-    const command = bytes[offset] & this.COMMAND_MASK
+  static parse (bytes) {
+    const command = bytes[0] & this.COMMAND_MASK
 
     /* if this packet is a cdg command */
     if (command === this.CDG_COMMAND) {
-      const opcode = bytes[offset + 1] & this.COMMAND_MASK
+      const opcode = bytes[1] & this.COMMAND_MASK
       const InstructionType = this.BY_TYPE[opcode]
 
       if (typeof (InstructionType) !== 'undefined') {
-        return new InstructionType(bytes, offset)
+        return new InstructionType(bytes)
       } else {
         console.log(`Unknown CDG instruction (instruction = ${opcode})`)
         return new CDGNoopInstruction()
@@ -461,11 +457,12 @@ class CDGPlayer {
     this.pc = -1
   }
 
-  load (bytes) {
+  load (buffer) {
     this.init()
+    const bytes = new Uint8Array(buffer)
 
     for (let offset = 0; offset < bytes.length; offset += PACKET_SIZE) {
-      const instruction = CDGParser.parseOne(bytes, offset)
+      const instruction = CDGParser.parse(bytes.slice(offset, offset + PACKET_SIZE))
       if (instruction != null) this.instructions.push(instruction)
     }
   }

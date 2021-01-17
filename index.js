@@ -357,16 +357,40 @@ class CDGLoadCLUTHighInstruction extends CDGLoadCLUTLowInstruction {
 * CDGParser
 ************************************************/
 class CDGParser {
-  static parse (bytes) {
-    const command = bytes[0] & this.COMMAND_MASK
+  constructor (buffer) {
+    this.bytes = new Uint8Array(buffer)
+    this.numPackets = buffer.byteLength / PACKET_SIZE
+    this.pc = -1
+  }
 
-    /* if this packet is a cdg command */
-    if (command === this.CDG_COMMAND) {
-      const opcode = bytes[1] & this.COMMAND_MASK
+  parseThrough (sec) {
+    // determine packet we should be at, based on spec
+    // of 4 packets per sector @ 75 sectors per second
+    const newPc = Math.floor(4 * 75 * sec)
+    const instructions = []
+
+    if (this.pc > newPc) {
+      // rewind kindly
+      this.pc = -1
+      instructions.isRestarting = true
+    }
+
+    while (this.pc < newPc && this.pc < this.numPackets) {
+      this.pc++
+      const offset = this.pc * PACKET_SIZE
+      instructions.push(this.parse(this.bytes.slice(offset, offset + PACKET_SIZE)))
+    }
+
+    return instructions
+  }
+
+  parse (packet) {
+    if ((packet[0] & this.COMMAND_MASK) === this.CDG_COMMAND) {
+      const opcode = packet[1] & this.COMMAND_MASK
       const InstructionType = this.BY_TYPE[opcode]
 
       if (typeof (InstructionType) !== 'undefined') {
-        return new InstructionType(bytes)
+        return new InstructionType(packet)
       } else {
         console.log(`Unknown CDG instruction (instruction = ${opcode})`)
         return new CDGNoopInstruction()
@@ -377,19 +401,19 @@ class CDGParser {
   }
 }
 
-CDGParser.COMMAND_MASK = 0x3F
-CDGParser.CDG_COMMAND = 0x9
-
-CDGParser.BY_TYPE = {}
-CDGParser.BY_TYPE[CDG_MEMORY_PRESET] = CDGMemoryPresetInstruction
-CDGParser.BY_TYPE[CDG_BORDER_PRESET] = CDGBorderPresetInstruction
-CDGParser.BY_TYPE[CDG_TILE_BLOCK] = CDGTileBlockInstruction
-CDGParser.BY_TYPE[CDG_SCROLL_PRESET] = CDGScrollPresetInstruction
-CDGParser.BY_TYPE[CDG_SCROLL_COPY] = CDGScrollCopyInstruction
-CDGParser.BY_TYPE[CDG_SET_KEY_COLOR] = CDGSetKeyColorInstruction
-CDGParser.BY_TYPE[CDG_LOAD_CLUT_LOW] = CDGLoadCLUTLowInstruction
-CDGParser.BY_TYPE[CDG_LOAD_CLUT_HI] = CDGLoadCLUTHighInstruction
-CDGParser.BY_TYPE[CDG_TILE_BLOCK_XOR] = CDGTileBlockXORInstruction
+CDGParser.prototype.COMMAND_MASK = 0x3F
+CDGParser.prototype.CDG_COMMAND = 0x9
+CDGParser.prototype.BY_TYPE = {
+  [CDG_MEMORY_PRESET]: CDGMemoryPresetInstruction,
+  [CDG_BORDER_PRESET]: CDGBorderPresetInstruction,
+  [CDG_TILE_BLOCK]: CDGTileBlockInstruction,
+  [CDG_SCROLL_PRESET]: CDGScrollPresetInstruction,
+  [CDG_SCROLL_COPY]: CDGScrollCopyInstruction,
+  [CDG_SET_KEY_COLOR]: CDGSetKeyColorInstruction,
+  [CDG_LOAD_CLUT_LOW]: CDGLoadCLUTLowInstruction,
+  [CDG_LOAD_CLUT_HI]: CDGLoadCLUTHighInstruction,
+  [CDG_TILE_BLOCK_XOR]: CDGTileBlockXORInstruction
+}
 
 /************************************************
 * CDGPlayer
@@ -406,20 +430,13 @@ class CDGPlayer {
   }
 
   init () {
-    this.instructions = []
     this.lastBackground = null
     this.isDirty = false
-    this.pc = -1
   }
 
   load (buffer) {
     this.init()
-    const bytes = new Uint8Array(buffer)
-
-    for (let offset = 0; offset < bytes.length; offset += PACKET_SIZE) {
-      const instruction = CDGParser.parse(bytes.slice(offset, offset + PACKET_SIZE))
-      if (instruction != null) this.instructions.push(instruction)
-    }
+    this.parser = new CDGParser(buffer)
   }
 
   render (curTime) {
@@ -428,26 +445,19 @@ class CDGPlayer {
       return
     } else if (isNaN(curTime) || curTime < 0) throw new Error(`Invalid time: ${curTime}`)
 
-    // determine packet we should be at, based on spec
-    // of 4 packets per sector @ 75 sectors per second
-    const newPc = Math.floor(4 * 75 * curTime)
+    const instructions = this.parser.parseThrough(curTime)
 
-    if (this.pc === newPc) {
-      // already rendered this but we'll try to help out and re-paint
+    if (!instructions.length) {
+      // nothing to do, but we'll try to help out and re-paint
       this.ctx.paint()
       return
-    } else if (this.pc > newPc) {
-      // rewind kindly
-      this.pc = -1
+    } else if (instructions.isRestarting) {
       this.ctx.init()
     }
 
-    // update CDG state
-    while (this.pc < newPc && this.pc < this.instructions.length - 1) {
-      this.pc += 1
-
+    for (const i of instructions) {
       // set dirty flag if work was performed (and flag isn't already set)
-      if (this.instructions[this.pc].execute(this.ctx) !== false && !this.isDirty) {
+      if (i.execute(this.ctx) !== false && !this.isDirty) {
         this.isDirty = true
       }
     }

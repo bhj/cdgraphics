@@ -1,3 +1,12 @@
+## v6.0.0 (TBD)
+
+**Breaking changes/migrating from 5.x:**
+
+When loading a file, you now only need to pass the ArrayBuffer of the response (the creation of the `new Uint8Array` is handled internally). See the README for more on using `load()`.
+
+**Improved:**
+- Instructions are now processed JIT rather than on `load()`, significantly reducing load times
+
 ## v5.0.0 (July 23, 2020)
 
 **Breaking changes/migrating from 4.x:**

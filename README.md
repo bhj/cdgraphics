@@ -5,7 +5,7 @@ A [CD+Graphics (CD+G)](https://en.wikipedia.org/wiki/CD%2BG) implementation in J
 * 60fps rendering with [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame)
 * Audio synchronization with [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime)
 * Optional background keying (transparency) and shadow effects
-* Supports callback for CD+G title background color changes
+* Supports callbacks for changes in CD+G title's background and content bounds
 * Supports rewind and random seek
 * ES2015+ with no dependencies
 
@@ -34,6 +34,7 @@ const cdg = new CDGraphics(canvas, { forceKey: true }) // force background trans
 | --- | --- | --- | --- |
 | forceKey | boolean | Force backgrounds to be transparent, even if the CD+G title did not explicitly specify it. | `false`
 | onBackgroundChange | function | Called when the CD+G title's background color or alpha changes. The RGBA color is passed as an array like `[r, g, b, a]` with alpha being `0` or `1`. The reported alpha includes the effect of the forceKey option, if enabled. | `undefined` |
+| onContentBoundsChange | function | Called when the coordinates of a bounding box that fits the CD+G title's content changes. The reported coordinates are passed as an array like `[x1, y1, x2, y2]` and account for any canvas scaling. Only useful when forceKey is enabled. | `undefined` |
 | shadowBlur | number | [CanvasRenderingContext2D.shadowBlur](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/shadowBlur) (You likely also want to enable forceKey) | `0` |
 | shadowColor | string | [CanvasRenderingContext2D.shadowColor](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/shadowColor) (Alpha is defaulted to `1` here so that any shadowBlur is visible without explicitly specifying this option) | `rgba(0,0,0,1)` |
 | shadowOffsetX | number | [CanvasRenderingContext2D.shadowOffsetX](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/shadowOffsetX) | `0` |
@@ -67,7 +68,7 @@ const play = () => {
 }
 const pause = () => cancelAnimationFrame(frameId)
 
-// link to <audio> element
+// link with <audio> element
 audio.addEventListener('play', play)
 audio.addEventListener('pause', pause)
 audio.addEventListener('ended', pause)

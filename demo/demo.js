@@ -8,8 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let frameId
 
   const cdg = new CDGraphics(canvas, {
-    onBackgroundChange: color => {
-      console.log('onBackgroundChange', color)
+    // forceKey: true,
+    onBackgroundChange: ([r, g, b, a]) => {
+      console.log('onBackgroundChange:', `rgba(${r},${g},${b},${a})`)
+    },
+    onContentBoundsChange: ([x1, y1, x2, y2]) => {
+      console.log('onContentBoundsChange:', `(${x1},${y1}) (${x2},${y2})`)
     }
   })
 
@@ -26,7 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
   audio.addEventListener('ended', pause)
   audio.addEventListener('seeked', () => cdg.render(audio.currentTime))
 
-  // demo options UI
+  // download and load cdg file
+  fetch(cdgUrl)
+    .then(response => response.arrayBuffer())
+    .then(buffer => {
+      cdg.load(buffer)
+      audio.src = audioUrl // pre-load audio
+    })
+
+  // demo options UI only
   const forceKeyCheckbox = document.getElementById('forceKey')
   const shadowBlurRange = document.getElementById('shadowBlur')
   const shadowOffsetXRange = document.getElementById('shadowOffsetX')
@@ -36,12 +48,4 @@ document.addEventListener('DOMContentLoaded', () => {
   shadowBlurRange.addEventListener('change', (e) => cdg.setOptions({ shadowBlur: e.target.value }))
   shadowOffsetXRange.addEventListener('change', (e) => cdg.setOptions({ shadowOffsetX: e.target.value }))
   shadowOffsetYRange.addEventListener('change', (e) => cdg.setOptions({ shadowOffsetY: e.target.value }))
-
-  // download and load cdg file
-  fetch(cdgUrl)
-    .then(response => response.arrayBuffer())
-    .then(buffer => {
-      cdg.load(buffer)
-      audio.src = audioUrl // pre-load audio
-    })
 })

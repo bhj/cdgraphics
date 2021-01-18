@@ -43,6 +43,7 @@ class CDGContext {
     this.keyColor = null // clut index
     this.bgColor = null // clut index
     this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
+    this.contentBounds = [0, 0, 0, 0] // x1, y1, x2, y2
     this.pixels = new Array(this.WIDTH * this.HEIGHT).fill(0)
     this.buffer = new Array(this.WIDTH * this.HEIGHT).fill(0)
     this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
@@ -63,15 +64,19 @@ class CDGContext {
     ]
   }
 
+  get contentBoundsCoords () {
+    const [x1, y1, x2, y2] = this.contentBounds
+    return [x1 * this.scale, y1 * this.scale, x2 * this.scale, y2 * this.scale]
+  }
+
   paint () {
-    const scale = Math.min(
-      this.userCanvas.clientWidth / this.WIDTH,
+    this.scale = Math.min(this.userCanvas.clientWidth / this.WIDTH,
       this.userCanvas.clientHeight / this.HEIGHT,
     )
 
     // clear destination canvas if there's transparency
     if (this.keyColor >= 0) {
-      this.userCanvasCtx.clearRect(0, 0, this.WIDTH * scale, this.HEIGHT * scale)
+      this.userCanvasCtx.clearRect(0, 0, this.WIDTH * this.scale, this.HEIGHT * this.scale)
     }
 
     // these get reset when the canvas is resized
@@ -87,18 +92,18 @@ class CDGContext {
       this.canvas,
       this.shadowBlur - this.shadowOffsetX,
       this.shadowBlur - this.shadowOffsetY,
-      (this.WIDTH * scale) - this.shadowBlur * 2,
-      (this.HEIGHT * scale) - this.shadowBlur * 2
+      (this.WIDTH * this.scale) - this.shadowBlur * 2,
+      (this.HEIGHT * this.scale) - this.shadowBlur * 2
     )
   }
 
   renderFrame () {
     const [left, top, right, bottom] = [0, 0, this.WIDTH, this.HEIGHT]
+    let [x1, y1, x2, y2] = [this.WIDTH, this.HEIGHT, 0, 0] // content bounds
+    let isContent = false
 
-    for (let x = left; x < right; x++) {
-      for (let y = top; y < bottom; y++) {
-        // The offset is where we draw the pixel in the raster data
-        const offset = 4 * (x + (y * this.WIDTH))
+    for (let y = top; y < bottom; y++) {
+      for (let x = left; x < right; x++) {
         // Respect the horizontal and vertical offsets for grabbing the pixel color
         const px = ((x - this.hOffset) + this.WIDTH) % this.WIDTH
         const py = ((y - this.vOffset) + this.HEIGHT) % this.HEIGHT
@@ -109,15 +114,31 @@ class CDGContext {
           (this.forceKey && (colorIndex === this.bgColor || this.bgColor == null))
 
         // Set the rgba values in the image data
+        const offset = 4 * (x + (y * this.WIDTH))
         this.imageData.data[offset] = r
         this.imageData.data[offset + 1] = g
         this.imageData.data[offset + 2] = b
         this.imageData.data[offset + 3] = isKeyColor ? 0x00 : 0xff
+
+        // test content bounds
+        if (!isKeyColor) {
+          isContent = true
+          if (x1 > x) x1 = x
+          if (y1 > y) y1 = y
+          if (x2 < x) x2 = x
+          if (y2 < y) y2 = y
+        }
       }
     }
 
     this.ctx.putImageData(this.imageData, 0, 0)
     this.paint()
+
+    // we make two tweaks to the reported bounds here:
+    // 1) if there are no visible pixels (i.e. bg is keyed and canvas was just cleared)
+    // we want to report [0,0,0,0] instead of the full dimensions (hence isContent flag)
+    // 2) account for width/height of the rightmost/bottommost pixels in 2nd coordinates
+    this.contentBounds = isContent || !this.forceKey ? [x1, y1, x2 + 1, y2 + 1] : [0, 0, 0, 0]
   }
 }
 
@@ -266,8 +287,7 @@ class CDGScrollPresetInstruction {
       return
     }
 
-    let offx
-    let offy
+    let offx, offy
     for (let x = 0; x < context.WIDTH; x++) {
       for (let y = 0; y < context.HEIGHT; y++) {
         offx = x + hmove
@@ -275,6 +295,7 @@ class CDGScrollPresetInstruction {
         context.buffer[x + y * context.WIDTH] = this.getPixel(context, offx, offy)
       }
     }
+
     const tmp = context.pixels
     context.pixels = context.buffer
     context.buffer = tmp
@@ -431,6 +452,7 @@ class CDGPlayer {
 
   init () {
     this.lastBackground = null
+    this.lastContentBounds = null
     this.isDirty = false
   }
 
@@ -476,11 +498,22 @@ class CDGPlayer {
         this.onBackgroundChange(cur)
       }
     }
+
+    if (this.onContentBoundsChange) {
+      const cur = this.ctx.contentBoundsCoords
+      const last = this.lastContentBounds
+
+      if (cur && !(last && cur.every((val, i) => val === last[i]))) {
+        this.lastContentBounds = cur
+        this.onContentBoundsChange(cur)
+      }
+    }
   }
 
   setOptions ({
     forceKey = this.ctx.forceKey || false,
     onBackgroundChange = this.onBackgroundChange || undefined,
+    onContentBoundsChange = this.onContentBoundsChange || undefined,
     shadowBlur = this.ctx.shadowBlur || 0,
     shadowColor = this.ctx.shadowColor || 'rgba(0,0,0,1)',
     shadowOffsetX = this.ctx.shadowOffsetX || 0,
@@ -490,8 +523,14 @@ class CDGPlayer {
       throw new Error('"onBackgroundChange" option must be a function')
     }
 
+    if (onContentBoundsChange && typeof onContentBoundsChange !== 'function') {
+      throw new Error('"onContentBoundsChange" option must be a function')
+    }
+
     this.onBackgroundChange = onBackgroundChange
+    this.onContentBoundsChange = onContentBoundsChange
     Object.assign(this.ctx, { forceKey, shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY })
+
     this.ctx.renderFrame()
   }
 }

@@ -450,14 +450,10 @@ class CDGPlayer {
     this.setOptions(opts)
   }
 
-  init () {
+  load (buffer) {
     this.lastBackground = null
     this.lastContentBounds = null
     this.isDirty = false
-  }
-
-  load (buffer) {
-    this.init()
     this.parser = new CDGParser(buffer)
   }
 

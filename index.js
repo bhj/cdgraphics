@@ -43,18 +43,7 @@ class CDGContext {
     this.clut[index] = [r, g, b].map(c => c * 17)
   }
 
-  get backgroundRGBA () {
-    if (this.bgColor === null) {
-      return [0, 0, 0, this.forceKey ? 0 : 1]
-    }
-
-    return [
-      ...this.clut[this.bgColor], // rgb
-      this.bgColor === this.keyColor || this.forceKey ? 0 : 1, // a
-    ]
-  }
-
-  renderFrame () {
+  renderFrame ({ forceKey = false } = {}) {
     const [left, top, right, bottom] = [0, 0, this.WIDTH, this.HEIGHT]
     let [x1, y1, x2, y2] = [this.WIDTH, this.HEIGHT, 0, 0] // content bounds
     let isContent = false
@@ -68,7 +57,7 @@ class CDGContext {
         const colorIndex = this.pixels[pixelIndex]
         const [r, g, b] = this.clut[colorIndex]
         const isKeyColor = colorIndex === this.keyColor ||
-          (this.forceKey && (colorIndex === this.bgColor || this.bgColor == null))
+          (forceKey && (colorIndex === this.bgColor || this.bgColor == null))
 
         // Set the rgba values in the image data
         const offset = 4 * (x + (y * this.WIDTH))
@@ -91,7 +80,7 @@ class CDGContext {
     // make two tweaks to the reported content bounds:
     // 1) if there are no visible pixels, report [0,0,0,0] (isContent flag)
     // 2) account for size of the rightmost/bottommost pixels in 2nd coordinates (+1)
-    this.contentBounds = isContent || !this.forceKey ? [x1, y1, x2 + 1, y2 + 1] : [0, 0, 0, 0]
+    this.contentBounds = isContent || !forceKey ? [x1, y1, x2 + 1, y2 + 1] : [0, 0, 0, 0]
   }
 }
 
@@ -393,30 +382,23 @@ CDGParser.prototype.BY_TYPE = {
 * CDGPlayer
 ************************************************/
 class CDGPlayer {
-  constructor (opts = {}) {
+  constructor () {
     this.ctx = new CDGContext()
-    this.setOptions(opts)
   }
 
   load (buffer) {
-    this.lastBackground = null
-    this.lastContentBounds = null
     this.isDirty = false
     this.parser = new CDGParser(buffer)
   }
 
-  render (curTime) {
-    if (typeof curTime === 'undefined') {
-      return createImageBitmap(this.ctx.imageData)
-    } else if (isNaN(curTime) || curTime < 0) {
+  render (curTime, opts) {
+    if (isNaN(curTime) || curTime < 0) {
       throw new Error(`Invalid time: ${curTime}`)
     }
 
     const instructions = this.parser.parseThrough(curTime)
 
-    if (!instructions.length) {
-      return createImageBitmap(this.ctx.imageData)
-    } else if (instructions.isRestarting) {
+    if (instructions.isRestarting) {
       this.ctx.init()
     }
 
@@ -427,52 +409,21 @@ class CDGPlayer {
       }
     }
 
+    const meta = {
+      isDirty: this.isDirty,
+      backgroundRGBA: this.ctx.bgColor === null
+        ? [0, 0, 0, opts.forceKey ? 0 : 1]
+        : [...this.ctx.clut[this.ctx.bgColor], this.ctx.bgColor === this.ctx.keyColor || opts.forceKey ? 0 : 1],
+      contentBounds: this.ctx.contentBounds,
+    }
+
     if (this.isDirty) {
-      this.ctx.renderFrame()
+      this.ctx.renderFrame(opts)
       this.isDirty = false
     }
 
-    if (this.onBackgroundChange) {
-      const cur = this.ctx.backgroundRGBA
-      const last = this.lastBackground
-
-      if (cur && !(last && cur.every((val, i) => val === last[i]))) {
-        this.lastBackground = cur
-        this.onBackgroundChange(cur)
-      }
-    }
-
-    if (this.onContentBoundsChange) {
-      const cur = this.ctx.contentBounds
-      const last = this.lastContentBounds
-
-      if (cur && !(last && cur.every((val, i) => val === last[i]))) {
-        this.lastContentBounds = cur
-        this.onContentBoundsChange(cur)
-      }
-    }
-
     return createImageBitmap(this.ctx.imageData)
-  }
-
-  setOptions ({
-    forceKey = this.ctx.forceKey || false,
-    onBackgroundChange = this.onBackgroundChange || undefined,
-    onContentBoundsChange = this.onContentBoundsChange || undefined,
-  } = {}) {
-    if (onBackgroundChange && typeof onBackgroundChange !== 'function') {
-      throw new Error('"onBackgroundChange" option must be a function')
-    }
-
-    if (onContentBoundsChange && typeof onContentBoundsChange !== 'function') {
-      throw new Error('"onContentBoundsChange" option must be a function')
-    }
-
-    this.onBackgroundChange = onBackgroundChange
-    this.onContentBoundsChange = onContentBoundsChange
-    Object.assign(this.ctx, { forceKey })
-
-    this.ctx.renderFrame()
+      .then(bitmap => ({ bitmap, ...meta }))
   }
 }
 

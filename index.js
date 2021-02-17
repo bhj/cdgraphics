@@ -93,15 +93,6 @@ CDGContext.prototype.TILE_WIDTH = 6
 CDGContext.prototype.TILE_HEIGHT = 12
 
 /************************************************
-* NOOP
-************************************************/
-class CDGNoopInstruction {
-  execute () {
-    return false // indicate no work was performed
-  }
-}
-
-/************************************************
 * MEMORY_PRESET
 ************************************************/
 class CDGMemoryPresetInstruction {
@@ -341,7 +332,10 @@ class CDGParser {
     while (this.pc < newPc && this.pc < this.numPackets) {
       this.pc++
       const offset = this.pc * PACKET_SIZE
-      instructions.push(this.parse(this.bytes.slice(offset, offset + PACKET_SIZE)))
+      const cmd = this.parse(this.bytes.slice(offset, offset + PACKET_SIZE))
+
+      // ignore no-ops
+      if (cmd) instructions.push(cmd)
     }
 
     return instructions
@@ -356,11 +350,11 @@ class CDGParser {
         return new InstructionType(packet)
       } else {
         console.log(`Unknown CDG instruction (instruction = ${opcode})`)
-        return new CDGNoopInstruction()
+        return false // no-op
       }
     }
 
-    return new CDGNoopInstruction()
+    return false // no-op
   }
 }
 
@@ -387,7 +381,6 @@ class CDGPlayer {
   }
 
   load (buffer) {
-    this.isDirty = false
     this.parser = new CDGParser(buffer)
   }
 
@@ -402,24 +395,20 @@ class CDGPlayer {
       this.ctx.init()
     }
 
-    for (const i of instructions) {
-      // set dirty flag if work was performed (and flag isn't already set)
-      if (i.execute(this.ctx) !== false && !this.isDirty) {
-        this.isDirty = true
+    if (instructions.length) {
+      for (const i of instructions) {
+        i.execute(this.ctx)
       }
+
+      this.ctx.renderFrame(opts)
     }
 
     const meta = {
-      isDirty: this.isDirty,
+      isDirty: !!instructions.length,
       backgroundRGBA: this.ctx.bgColor === null
         ? [0, 0, 0, opts.forceKey ? 0 : 1]
         : [...this.ctx.clut[this.ctx.bgColor], this.ctx.bgColor === this.ctx.keyColor || opts.forceKey ? 0 : 1],
       contentBounds: this.ctx.contentBounds,
-    }
-
-    if (this.isDirty) {
-      this.ctx.renderFrame(opts)
-      this.isDirty = false
     }
 
     return createImageBitmap(this.ctx.imageData)

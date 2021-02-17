@@ -121,9 +121,9 @@ class CDGMemoryPresetInstruction {
     this.repeat = bytes[CDG_DATA + 1] & 0x0F
   }
 
-  execute (context) {
-    context.pixels.fill(this.color)
-    context.bgColor = this.color
+  execute (ctx) {
+    ctx.pixels.fill(this.color)
+    ctx.bgColor = this.color
   }
 }
 
@@ -168,12 +168,12 @@ class CDGTileBlockInstruction {
     this.pixels = bytes.slice(CDG_DATA + 4, CDG_DATA + 16)
   }
 
-  execute (context) {
+  execute (ctx) {
     /* blit a tile */
-    const x = this.column * context.TILE_WIDTH
-    const y = this.row * context.TILE_HEIGHT
+    const x = this.column * ctx.TILE_WIDTH
+    const y = this.row * ctx.TILE_HEIGHT
 
-    if (x + 6 > context.WIDTH || y + 12 > context.HEIGHT) {
+    if (x + 6 > ctx.WIDTH || y + 12 > ctx.HEIGHT) {
       console.log(`TileBlock out of bounds (${this.row},${this.column})`)
       return
     }
@@ -182,8 +182,8 @@ class CDGTileBlockInstruction {
       const curbyte = this.pixels[i]
       for (let j = 0; j < 6; j++) {
         const color = this.colors[((curbyte >> (5 - j)) & 0x1)]
-        const offset = x + j + (y + i) * context.WIDTH
-        this.op(context, offset, color)
+        const offset = x + j + (y + i) * ctx.WIDTH
+        this.op(ctx, offset, color)
       }
     }
   }
@@ -218,22 +218,22 @@ class CDGScrollPresetInstruction {
     this.vOffset = (vScroll & 0x07)
   }
 
-  execute (context) {
-    context.hOffset = Math.min(this.hOffset, 5)
-    context.vOffset = Math.min(this.vOffset, 11)
+  execute (ctx) {
+    ctx.hOffset = Math.min(this.hOffset, 5)
+    ctx.vOffset = Math.min(this.vOffset, 11)
 
     let hmove = 0
     if (this.hCmd === CDG_SCROLL_RIGHT) {
-      hmove = context.TILE_WIDTH
+      hmove = ctx.TILE_WIDTH
     } else if (this.hCmd === CDG_SCROLL_LEFT) {
-      hmove = -context.TILE_WIDTH
+      hmove = -ctx.TILE_WIDTH
     }
 
     let vmove = 0
     if (this.vCmd === CDG_SCROLL_DOWN) {
-      vmove = context.TILE_HEIGHT
+      vmove = ctx.TILE_HEIGHT
     } else if (this.vCmd === CDG_SCROLL_UP) {
-      vmove = -context.TILE_HEIGHT
+      vmove = -ctx.TILE_HEIGHT
     }
 
     if (hmove === 0 && vmove === 0) {
@@ -241,17 +241,17 @@ class CDGScrollPresetInstruction {
     }
 
     let offx, offy
-    for (let x = 0; x < context.WIDTH; x++) {
-      for (let y = 0; y < context.HEIGHT; y++) {
+    for (let x = 0; x < ctx.WIDTH; x++) {
+      for (let y = 0; y < ctx.HEIGHT; y++) {
         offx = x + hmove
         offy = y + vmove
-        context.buffer[x + y * context.WIDTH] = this.getPixel(context, offx, offy)
+        ctx.buffer[x + y * ctx.WIDTH] = this.getPixel(ctx, offx, offy)
       }
     }
 
-    const tmp = context.pixels
-    context.pixels = context.buffer
-    context.buffer = tmp
+    const tmp = ctx.pixels
+    ctx.pixels = ctx.buffer
+    ctx.buffer = tmp
   }
 
   getPixel ({ WIDTH, HEIGHT, pixels }, offx, offy) {
@@ -282,8 +282,8 @@ class CDGSetKeyColorInstruction {
     this.index = bytes[CDG_DATA] & 0x0F
   }
 
-  execute (context) {
-    context.keyColor = this.index
+  execute (ctx) {
+    ctx.keyColor = this.index
   }
 }
 
@@ -308,9 +308,9 @@ class CDGLoadCLUTLowInstruction {
     }
   }
 
-  execute (context) {
+  execute (ctx) {
     for (let i = 0; i < 8; i++) {
-      context.setCLUTEntry(i + this.clutOffset,
+      ctx.setCLUTEntry(i + this.clutOffset,
         this.colors[i][0],
         this.colors[i][1],
         this.colors[i][2])

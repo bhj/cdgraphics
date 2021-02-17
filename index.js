@@ -23,17 +23,7 @@ const PACKET_SIZE = 24
 * the screen, clut and other CDG variables.
 ************************************************/
 class CDGContext {
-  constructor (userCanvas) {
-    // visible canvas
-    this.userCanvas = userCanvas
-    this.userCanvasCtx = userCanvas.getContext('2d')
-
-    // offscreen canvas
-    this.canvas = document.createElement('canvas')
-    this.canvas.width = this.WIDTH
-    this.canvas.height = this.HEIGHT
-    this.ctx = this.canvas.getContext('2d')
-
+  constructor () {
     this.init()
   }
 
@@ -44,9 +34,9 @@ class CDGContext {
     this.bgColor = null // clut index
     this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
     this.contentBounds = [0, 0, 0, 0] // x1, y1, x2, y2
-    this.pixels = new Array(this.WIDTH * this.HEIGHT).fill(0)
-    this.buffer = new Array(this.WIDTH * this.HEIGHT).fill(0)
-    this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
+    this.pixels = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
+    this.buffer = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
+    this.imageData = new ImageData(this.WIDTH, this.HEIGHT)
   }
 
   setCLUTEntry (index, r, g, b) {
@@ -62,39 +52,6 @@ class CDGContext {
       ...this.clut[this.bgColor], // rgb
       this.bgColor === this.keyColor || this.forceKey ? 0 : 1, // a
     ]
-  }
-
-  get contentBoundsCoords () {
-    const [x1, y1, x2, y2] = this.contentBounds
-    return [x1 * this.scale, y1 * this.scale, x2 * this.scale, y2 * this.scale]
-  }
-
-  paint () {
-    this.scale = Math.min(this.userCanvas.clientWidth / this.WIDTH,
-      this.userCanvas.clientHeight / this.HEIGHT,
-    )
-
-    // clear destination canvas if there's transparency
-    if (this.keyColor >= 0) {
-      this.userCanvasCtx.clearRect(0, 0, this.WIDTH * this.scale, this.HEIGHT * this.scale)
-    }
-
-    // these get reset when the canvas is resized
-    this.userCanvasCtx.imageSmoothingEnabled = false
-    this.userCanvasCtx.shadowBlur = this.shadowBlur
-    this.userCanvasCtx.shadowColor = this.shadowColor
-    this.userCanvasCtx.shadowOffsetX = this.shadowOffsetX
-    this.userCanvasCtx.shadowOffsetY = this.shadowOffsetY
-
-    // copy and scale to visible canvas, shrinking to
-    // prevent any shadow from being clipped
-    this.userCanvasCtx.drawImage(
-      this.canvas,
-      this.shadowBlur - this.shadowOffsetX,
-      this.shadowBlur - this.shadowOffsetY,
-      (this.WIDTH * this.scale) - this.shadowBlur * 2,
-      (this.HEIGHT * this.scale) - this.shadowBlur * 2
-    )
   }
 
   renderFrame () {
@@ -131,13 +88,9 @@ class CDGContext {
       }
     }
 
-    this.ctx.putImageData(this.imageData, 0, 0)
-    this.paint()
-
-    // we make two tweaks to the reported bounds here:
-    // 1) if there are no visible pixels (i.e. bg is keyed and canvas was just cleared)
-    // we want to report [0,0,0,0] instead of the full dimensions (hence isContent flag)
-    // 2) account for width/height of the rightmost/bottommost pixels in 2nd coordinates
+    // make two tweaks to the reported content bounds:
+    // 1) if there are no visible pixels, report [0,0,0,0] (isContent flag)
+    // 2) account for size of the rightmost/bottommost pixels in 2nd coordinates (+1)
     this.contentBounds = isContent || !this.forceKey ? [x1, y1, x2 + 1, y2 + 1] : [0, 0, 0, 0]
   }
 }
@@ -440,13 +393,8 @@ CDGParser.prototype.BY_TYPE = {
 * CDGPlayer
 ************************************************/
 class CDGPlayer {
-  constructor (canvas, opts = {}) {
-    if (!(canvas instanceof HTMLCanvasElement)) {
-      throw new Error('Must be instantiated with an HTMLCanvasElement')
-    }
-
-    this.canvas = canvas
-    this.ctx = new CDGContext(this.canvas)
+  constructor (opts = {}) {
+    this.ctx = new CDGContext()
     this.setOptions(opts)
   }
 
@@ -459,16 +407,15 @@ class CDGPlayer {
 
   render (curTime) {
     if (typeof curTime === 'undefined') {
-      this.ctx.paint()
-      return
-    } else if (isNaN(curTime) || curTime < 0) throw new Error(`Invalid time: ${curTime}`)
+      return createImageBitmap(this.ctx.imageData)
+    } else if (isNaN(curTime) || curTime < 0) {
+      throw new Error(`Invalid time: ${curTime}`)
+    }
 
     const instructions = this.parser.parseThrough(curTime)
 
     if (!instructions.length) {
-      // nothing to do, but we'll try to help out and re-paint
-      this.ctx.paint()
-      return
+      return createImageBitmap(this.ctx.imageData)
     } else if (instructions.isRestarting) {
       this.ctx.init()
     }
@@ -496,7 +443,7 @@ class CDGPlayer {
     }
 
     if (this.onContentBoundsChange) {
-      const cur = this.ctx.contentBoundsCoords
+      const cur = this.ctx.contentBounds
       const last = this.lastContentBounds
 
       if (cur && !(last && cur.every((val, i) => val === last[i]))) {
@@ -504,16 +451,14 @@ class CDGPlayer {
         this.onContentBoundsChange(cur)
       }
     }
+
+    return createImageBitmap(this.ctx.imageData)
   }
 
   setOptions ({
     forceKey = this.ctx.forceKey || false,
     onBackgroundChange = this.onBackgroundChange || undefined,
     onContentBoundsChange = this.onContentBoundsChange || undefined,
-    shadowBlur = this.ctx.shadowBlur || 0,
-    shadowColor = this.ctx.shadowColor || 'rgba(0,0,0,1)',
-    shadowOffsetX = this.ctx.shadowOffsetX || 0,
-    shadowOffsetY = this.ctx.shadowOffsetY || 0
   } = {}) {
     if (onBackgroundChange && typeof onBackgroundChange !== 'function') {
       throw new Error('"onBackgroundChange" option must be a function')
@@ -525,7 +470,7 @@ class CDGPlayer {
 
     this.onBackgroundChange = onBackgroundChange
     this.onContentBoundsChange = onContentBoundsChange
-    Object.assign(this.ctx, { forceKey, shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY })
+    Object.assign(this.ctx, { forceKey })
 
     this.ctx.renderFrame()
   }

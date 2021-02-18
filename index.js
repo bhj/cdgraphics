@@ -33,10 +33,13 @@ class CDGContext {
     this.keyColor = null // clut index
     this.bgColor = null // clut index
     this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
-    this.contentBounds = [0, 0, 0, 0] // x1, y1, x2, y2
     this.pixels = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
     this.buffer = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
     this.imageData = new ImageData(this.WIDTH, this.HEIGHT)
+
+    // informational
+    this.contentBounds = [0, 0, 0, 0] // x1, y1, x2, y2
+    this.backgroundRGBA = [0, 0, 0, 0]
   }
 
   setCLUTEntry (index, r, g, b) {
@@ -77,10 +80,15 @@ class CDGContext {
       }
     }
 
-    // make two tweaks to the reported content bounds:
+    // report content bounds, with two tweaks:
     // 1) if there are no visible pixels, report [0,0,0,0] (isContent flag)
     // 2) account for size of the rightmost/bottommost pixels in 2nd coordinates (+1)
     this.contentBounds = isContent || !forceKey ? [x1, y1, x2 + 1, y2 + 1] : [0, 0, 0, 0]
+
+    // report background status
+    this.backgroundRGBA = this.bgColor === null
+      ? [0, 0, 0, forceKey ? 0 : 1]
+      : [...this.clut[this.bgColor], this.bgColor === this.keyColor || forceKey ? 0 : 1]
   }
 }
 
@@ -381,38 +389,37 @@ class CDGPlayer {
   }
 
   load (buffer) {
+    this.forceKey = null
     this.parser = new CDGParser(buffer)
   }
 
-  render (curTime, opts) {
+  render (curTime, opts = {}) {
     if (isNaN(curTime) || curTime < 0) {
       throw new Error(`Invalid time: ${curTime}`)
     }
 
     const instructions = this.parser.parseThrough(curTime)
+    const isChanged = !!instructions.length || !!instructions.isRestarting || opts.forceKey !== this.forceKey
+    this.forceKey = opts.forceKey
 
     if (instructions.isRestarting) {
       this.ctx.init()
     }
 
-    if (instructions.length) {
-      for (const i of instructions) {
-        i.execute(this.ctx)
-      }
+    for (const i of instructions) {
+      i.execute(this.ctx)
+    }
 
+    if (isChanged) {
       this.ctx.renderFrame(opts)
     }
 
-    const meta = {
-      isDirty: !!instructions.length,
-      backgroundRGBA: this.ctx.bgColor === null
-        ? [0, 0, 0, opts.forceKey ? 0 : 1]
-        : [...this.ctx.clut[this.ctx.bgColor], this.ctx.bgColor === this.ctx.keyColor || opts.forceKey ? 0 : 1],
+    return {
+      imageData: this.ctx.imageData,
+      isChanged,
+      backgroundRGBA: this.ctx.backgroundRGBA,
       contentBounds: this.ctx.contentBounds,
     }
-
-    return createImageBitmap(this.ctx.imageData)
-      .then(bitmap => ({ bitmap, ...meta }))
   }
 }
 

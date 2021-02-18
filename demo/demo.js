@@ -11,10 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let frameId
 
   const doRender = time => {
-    cdg.render(time, { forceKey: forceKeyCheckbox.checked })
-      .then(frame => {
+    const frame = cdg.render(time, { forceKey: forceKeyCheckbox.checked })
+    if (!frame.isChanged) return
+
+    createImageBitmap(frame.imageData)
+      .then(bitmap => {
         ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight)
-        ctx.drawImage(frame.bitmap, 0, 0, canvas.clientWidth, canvas.clientHeight)
+        ctx.drawImage(bitmap, 0, 0, canvas.clientWidth, canvas.clientHeight)
       })
   }
 

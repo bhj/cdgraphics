@@ -1,7 +1,7 @@
 {
   "name": "cdgraphics",
-  "version": "5.0.0",
-  "description": "CD+Graphics (CD+G) JS/HTML5 player",
+  "version": "6.0.0",
+  "description": "A fast, flexible CD+Graphics (CD+G) renderer",
   "repository": {
     "type": "git",
     "url": "https://github.com/bhj/cdgraphics.git"
@@ -13,23 +13,24 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
+    "canvas",
     "cdg",
     "cd+g",
     "lyrics",
     "mp3+g",
+    "music",
     "karaoke"
   ],
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^7.18.0",
+    "eslint": "^7.20.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-promise": "^4.3.1",
     "exports-loader": "^2.0.0",
-    "imports-loader": "^1.2.0",
-    "webpack": "^5.15.0",
-    "webpack-cli": "^4.3.1",
+    "webpack": "^5.23.0",
+    "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {}

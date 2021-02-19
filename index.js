@@ -389,14 +389,15 @@ class CDGPlayer {
   }
 
   load (buffer) {
+    if (!(buffer instanceof ArrayBuffer)) throw new Error('load() expects an ArrayBuffer')
+
     this.forceKey = null
     this.parser = new CDGParser(buffer)
   }
 
   render (time, opts = {}) {
-    if (isNaN(time) || time < 0) {
-      throw new Error(`Invalid time: ${time}`)
-    }
+    if (!this.parser) throw new Error('load() must be called before render()')
+    if (isNaN(time) || time < 0) throw new Error(`Invalid time: ${time}`)
 
     const instructions = this.parser.parseThrough(time)
     const isChanged = !!instructions.length || !!instructions.isRestarting || opts.forceKey !== this.forceKey

@@ -21,14 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
       })
   }
 
-  // for stopping/starting the render loop
+  // render loop
   const pause = () => cancelAnimationFrame(frameId)
   const play = () => {
     frameId = requestAnimationFrame(play)
     doRender(audio.currentTime)
   }
 
-  // bind to audio events (depending on your app, not all are strictly necessary)
+  // follow audio events (depending on your app, not all are strictly necessary)
   audio.addEventListener('play', play)
   audio.addEventListener('pause', pause)
   audio.addEventListener('ended', pause)

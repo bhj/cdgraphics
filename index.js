@@ -38,8 +38,8 @@ class CDGContext {
     this.imageData = new ImageData(this.WIDTH, this.HEIGHT)
 
     // informational
-    this.contentBounds = [0, 0, 0, 0] // x1, y1, x2, y2
     this.backgroundRGBA = [0, 0, 0, 0]
+    this.contentBounds = [0, 0, 0, 0] // x1, y1, x2, y2
   }
 
   setCLUTEntry (index, r, g, b) {
@@ -393,14 +393,14 @@ class CDGPlayer {
     this.parser = new CDGParser(buffer)
   }
 
-  render (curTime, opts = {}) {
-    if (isNaN(curTime) || curTime < 0) {
-      throw new Error(`Invalid time: ${curTime}`)
+  render (time, opts = {}) {
+    if (isNaN(time) || time < 0) {
+      throw new Error(`Invalid time: ${time}`)
     }
 
-    const instructions = this.parser.parseThrough(curTime)
+    const instructions = this.parser.parseThrough(time)
     const isChanged = !!instructions.length || !!instructions.isRestarting || opts.forceKey !== this.forceKey
-    this.forceKey = opts.forceKey
+    this.forceKey = opts.forceKey // cache last value so we re-render if it changes
 
     if (instructions.isRestarting) {
       this.ctx.init()

@@ -1,4 +1,4 @@
-## v6.0.0 (TBD)
+## v6.0.0 (February 19, 2021)
 
 v6 is a **major change** making the library significantly smaller and more flexible. Please see the README for updated example usage.
 

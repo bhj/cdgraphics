@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createImageBitmap(frame.imageData)
       .then(bitmap => {
         ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight)
+        ctx.imageSmoothingEnabled = false
         ctx.drawImage(bitmap, 0, 0, canvas.clientWidth, canvas.clientHeight)
       })
   }

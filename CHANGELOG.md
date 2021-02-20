@@ -1,3 +1,16 @@
+## v6.0.0 (February 19, 2021)
+
+v6 is a **major change** making the library significantly smaller and more flexible. Please see the README for updated example usage.
+
+- Instead of drawing to a canvas, `render()` now simply returns an [ImageData object](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) along with some metadata. This gives full control over your canvas (if a canvas is used at all!)
+- The `onBackgroundChange` callback is removed; instead, check the `backgroundRGBA` metadata provided with each rendered frame
+- The `setOptions()` method is removed, as options are now arguments to `render()`
+- When loading a file, you now only need to pass the ArrayBuffer of the response (the creation of the `new Uint8Array` is handled internally)
+
+**Improved:**
+- Instructions are now processed JIT, significantly reducing `load()` time
+- Added `contentBounds` metadata describing a bounding box that fits the rendered frame's non-transparent content
+
 ## v5.0.0 (July 23, 2020)
 
 **Breaking changes/migrating from 4.x:**

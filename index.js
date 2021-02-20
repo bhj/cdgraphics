@@ -19,23 +19,11 @@ const CDG_DATA = 4
 const PACKET_SIZE = 24
 
 /************************************************
-*
 * CDGContext represents a specific state of
 * the screen, clut and other CDG variables.
-*
 ************************************************/
 class CDGContext {
-  constructor (userCanvas) {
-    // visible canvas
-    this.userCanvas = userCanvas
-    this.userCanvasCtx = userCanvas.getContext('2d')
-
-    // offscreen canvas
-    this.canvas = document.createElement('canvas')
-    this.canvas.width = this.WIDTH
-    this.canvas.height = this.HEIGHT
-    this.ctx = this.canvas.getContext('2d')
-
+  constructor () {
     this.init()
   }
 
@@ -45,62 +33,26 @@ class CDGContext {
     this.keyColor = null // clut index
     this.bgColor = null // clut index
     this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
-    this.pixels = new Array(this.WIDTH * this.HEIGHT).fill(0)
-    this.buffer = new Array(this.WIDTH * this.HEIGHT).fill(0)
-    this.imageData = this.ctx.createImageData(this.WIDTH, this.HEIGHT)
+    this.pixels = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
+    this.buffer = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
+    this.imageData = new ImageData(this.WIDTH, this.HEIGHT)
+
+    // informational
+    this.backgroundRGBA = [0, 0, 0, 0]
+    this.contentBounds = [0, 0, 0, 0] // x1, y1, x2, y2
   }
 
   setCLUTEntry (index, r, g, b) {
     this.clut[index] = [r, g, b].map(c => c * 17)
   }
 
-  get backgroundRGBA () {
-    if (this.bgColor === null) {
-      return [0, 0, 0, this.forceKey ? 0 : 1]
-    }
-
-    return [
-      ...this.clut[this.bgColor], // rgb
-      this.bgColor === this.keyColor || this.forceKey ? 0 : 1, // a
-    ]
-  }
-
-  paint () {
-    const scale = Math.min(
-      this.userCanvas.clientWidth / this.WIDTH,
-      this.userCanvas.clientHeight / this.HEIGHT,
-    )
-
-    // clear destination canvas if there's transparency
-    if (this.keyColor >= 0) {
-      this.userCanvasCtx.clearRect(0, 0, this.WIDTH * scale, this.HEIGHT * scale)
-    }
-
-    // these get reset when the canvas is resized
-    this.userCanvasCtx.imageSmoothingEnabled = false
-    this.userCanvasCtx.shadowBlur = this.shadowBlur
-    this.userCanvasCtx.shadowColor = this.shadowColor
-    this.userCanvasCtx.shadowOffsetX = this.shadowOffsetX
-    this.userCanvasCtx.shadowOffsetY = this.shadowOffsetY
-
-    // copy and scale to visible canvas, shrinking to
-    // prevent any shadow from being clipped
-    this.userCanvasCtx.drawImage(
-      this.canvas,
-      this.shadowBlur - this.shadowOffsetX,
-      this.shadowBlur - this.shadowOffsetY,
-      (this.WIDTH * scale) - this.shadowBlur * 2,
-      (this.HEIGHT * scale) - this.shadowBlur * 2
-    )
-  }
-
-  renderFrame () {
+  renderFrame ({ forceKey = false } = {}) {
     const [left, top, right, bottom] = [0, 0, this.WIDTH, this.HEIGHT]
+    let [x1, y1, x2, y2] = [this.WIDTH, this.HEIGHT, 0, 0] // content bounds
+    let isContent = false
 
-    for (let x = left; x < right; x++) {
-      for (let y = top; y < bottom; y++) {
-        // The offset is where we draw the pixel in the raster data
-        const offset = 4 * (x + (y * this.WIDTH))
+    for (let y = top; y < bottom; y++) {
+      for (let x = left; x < right; x++) {
         // Respect the horizontal and vertical offsets for grabbing the pixel color
         const px = ((x - this.hOffset) + this.WIDTH) % this.WIDTH
         const py = ((y - this.vOffset) + this.HEIGHT) % this.HEIGHT
@@ -108,18 +60,35 @@ class CDGContext {
         const colorIndex = this.pixels[pixelIndex]
         const [r, g, b] = this.clut[colorIndex]
         const isKeyColor = colorIndex === this.keyColor ||
-          (this.forceKey && (colorIndex === this.bgColor || this.bgColor == null))
+          (forceKey && (colorIndex === this.bgColor || this.bgColor == null))
 
         // Set the rgba values in the image data
+        const offset = 4 * (x + (y * this.WIDTH))
         this.imageData.data[offset] = r
         this.imageData.data[offset + 1] = g
         this.imageData.data[offset + 2] = b
         this.imageData.data[offset + 3] = isKeyColor ? 0x00 : 0xff
+
+        // test content bounds
+        if (!isKeyColor) {
+          isContent = true
+          if (x1 > x) x1 = x
+          if (y1 > y) y1 = y
+          if (x2 < x) x2 = x
+          if (y2 < y) y2 = y
+        }
       }
     }
 
-    this.ctx.putImageData(this.imageData, 0, 0)
-    this.paint()
+    // report content bounds, with two tweaks:
+    // 1) if there are no visible pixels, report [0,0,0,0] (isContent flag)
+    // 2) account for size of the rightmost/bottommost pixels in 2nd coordinates (+1)
+    this.contentBounds = isContent || !forceKey ? [x1, y1, x2 + 1, y2 + 1] : [0, 0, 0, 0]
+
+    // report background status
+    this.backgroundRGBA = this.bgColor === null
+      ? [0, 0, 0, forceKey ? 0 : 1]
+      : [...this.clut[this.bgColor], this.bgColor === this.keyColor || forceKey ? 0 : 1]
   }
 }
 
@@ -131,55 +100,27 @@ CDGContext.prototype.DISPLAY_BOUNDS = [6, 12, 294, 204]
 CDGContext.prototype.TILE_WIDTH = 6
 CDGContext.prototype.TILE_HEIGHT = 12
 
-class CDGInstruction {
-  constructor (bytes = [], offset = 0) {
-    this.bytes = bytes.slice(offset, offset + PACKET_SIZE)
-  }
-
-  execute (context) { }
-}
-
 /************************************************
-*
-* NOOP
-*
-************************************************/
-class CDGNoopInstruction {
-  execute () {
-    return false // indicate no work was performed
-  }
-}
-
-/************************************************
-*
 * MEMORY_PRESET
-*
 ************************************************/
-class CDGMemoryPresetInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
-
-    const doff = offset + CDG_DATA
-    this.color = bytes[doff] & 0x0F
-    this.repeat = bytes[doff + 1] & 0x0F
+class CDGMemoryPresetInstruction {
+  constructor (bytes) {
+    this.color = bytes[CDG_DATA] & 0x0F
+    this.repeat = bytes[CDG_DATA + 1] & 0x0F
   }
 
-  execute (context) {
-    context.pixels.fill(this.color)
-    context.bgColor = this.color
+  execute (ctx) {
+    ctx.pixels.fill(this.color)
+    ctx.bgColor = this.color
   }
 }
 
 /************************************************
-*
 * BORDER_PRESET
-*
 ************************************************/
-class CDGBorderPresetInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
-
-    this.color = bytes[offset + CDG_DATA] & 0x0F
+class CDGBorderPresetInstruction {
+  constructor (bytes) {
+    this.color = bytes[CDG_DATA] & 0x0F
   }
 
   execute ({ DISPLAY_BOUNDS, WIDTH, pixels, HEIGHT }) {
@@ -204,28 +145,23 @@ class CDGBorderPresetInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * TILE_BLOCK
-*
 ************************************************/
-class CDGTileBlockInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
-
-    const doff = offset + CDG_DATA
+class CDGTileBlockInstruction {
+  constructor (bytes) {
     // some players check bytes[doff+1] & 0x20 and ignores if it is set (?)
-    this.colors = [bytes[doff] & 0x0F, bytes[doff + 1] & 0x0F]
-    this.row = bytes[doff + 2] & 0x1F
-    this.column = bytes[doff + 3] & 0x3F
-    this.pixels = bytes.slice(doff + 4, doff + 16)
+    this.colors = [bytes[CDG_DATA] & 0x0F, bytes[CDG_DATA + 1] & 0x0F]
+    this.row = bytes[CDG_DATA + 2] & 0x1F
+    this.column = bytes[CDG_DATA + 3] & 0x3F
+    this.pixels = bytes.slice(CDG_DATA + 4, CDG_DATA + 16)
   }
 
-  execute (context) {
+  execute (ctx) {
     /* blit a tile */
-    const x = this.column * context.TILE_WIDTH
-    const y = this.row * context.TILE_HEIGHT
+    const x = this.column * ctx.TILE_WIDTH
+    const y = this.row * ctx.TILE_HEIGHT
 
-    if (x + 6 > context.WIDTH || y + 12 > context.HEIGHT) {
+    if (x + 6 > ctx.WIDTH || y + 12 > ctx.HEIGHT) {
       console.log(`TileBlock out of bounds (${this.row},${this.column})`)
       return
     }
@@ -234,8 +170,8 @@ class CDGTileBlockInstruction extends CDGInstruction {
       const curbyte = this.pixels[i]
       for (let j = 0; j < 6; j++) {
         const color = this.colors[((curbyte >> (5 - j)) & 0x1)]
-        const offset = x + j + (y + i) * context.WIDTH
-        this.op(context, offset, color)
+        const offset = x + j + (y + i) * ctx.WIDTH
+        this.op(ctx, offset, color)
       }
     }
   }
@@ -246,9 +182,7 @@ class CDGTileBlockInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * TILE_BLOCK_XOR
-*
 ************************************************/
 class CDGTileBlockXORInstruction extends CDGTileBlockInstruction {
   op ({ pixels }, offset, color) {
@@ -257,60 +191,55 @@ class CDGTileBlockXORInstruction extends CDGTileBlockInstruction {
 }
 
 /************************************************
-*
 * SCROLL_PRESET
-*
 ************************************************/
-class CDGScrollPresetInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
+class CDGScrollPresetInstruction {
+  constructor (bytes) {
+    this.color = bytes[CDG_DATA] & 0x0F
 
-    const doff = offset + CDG_DATA
-    this.color = bytes[doff] & 0x0F
-
-    const hScroll = bytes[doff + 1] & 0x3F
+    const hScroll = bytes[CDG_DATA + 1] & 0x3F
     this.hCmd = (hScroll & 0x30) >> 4
     this.hOffset = (hScroll & 0x07)
 
-    const vScroll = bytes[doff + 2] & 0x3F
+    const vScroll = bytes[CDG_DATA + 2] & 0x3F
     this.vCmd = (vScroll & 0x30) >> 4
     this.vOffset = (vScroll & 0x07)
   }
 
-  execute (context) {
-    context.hOffset = Math.min(this.hOffset, 5)
-    context.vOffset = Math.min(this.vOffset, 11)
+  execute (ctx) {
+    ctx.hOffset = Math.min(this.hOffset, 5)
+    ctx.vOffset = Math.min(this.vOffset, 11)
 
     let hmove = 0
     if (this.hCmd === CDG_SCROLL_RIGHT) {
-      hmove = context.TILE_WIDTH
+      hmove = ctx.TILE_WIDTH
     } else if (this.hCmd === CDG_SCROLL_LEFT) {
-      hmove = -context.TILE_WIDTH
+      hmove = -ctx.TILE_WIDTH
     }
 
     let vmove = 0
     if (this.vCmd === CDG_SCROLL_DOWN) {
-      vmove = context.TILE_HEIGHT
+      vmove = ctx.TILE_HEIGHT
     } else if (this.vCmd === CDG_SCROLL_UP) {
-      vmove = -context.TILE_HEIGHT
+      vmove = -ctx.TILE_HEIGHT
     }
 
     if (hmove === 0 && vmove === 0) {
       return
     }
 
-    let offx
-    let offy
-    for (let x = 0; x < context.WIDTH; x++) {
-      for (let y = 0; y < context.HEIGHT; y++) {
+    let offx, offy
+    for (let x = 0; x < ctx.WIDTH; x++) {
+      for (let y = 0; y < ctx.HEIGHT; y++) {
         offx = x + hmove
         offy = y + vmove
-        context.buffer[x + y * context.WIDTH] = this.getPixel(context, offx, offy)
+        ctx.buffer[x + y * ctx.WIDTH] = this.getPixel(ctx, offx, offy)
       }
     }
-    const tmp = context.pixels
-    context.pixels = context.buffer
-    context.buffer = tmp
+
+    const tmp = ctx.pixels
+    ctx.pixels = ctx.buffer
+    ctx.buffer = tmp
   }
 
   getPixel ({ WIDTH, HEIGHT, pixels }, offx, offy) {
@@ -323,9 +252,7 @@ class CDGScrollPresetInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * SCROLL_COPY
-*
 ************************************************/
 class CDGScrollCopyInstruction extends CDGScrollPresetInstruction {
   getPixel ({ WIDTH, HEIGHT, pixels }, offx, offy) {
@@ -336,35 +263,27 @@ class CDGScrollCopyInstruction extends CDGScrollPresetInstruction {
 }
 
 /************************************************
-*
 * SET_KEY_COLOR
-*
 ************************************************/
-class CDGSetKeyColorInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
-    this.index = bytes[offset + CDG_DATA] & 0x0F
+class CDGSetKeyColorInstruction {
+  constructor (bytes) {
+    this.index = bytes[CDG_DATA] & 0x0F
   }
 
-  execute (context) {
-    context.keyColor = this.index
+  execute (ctx) {
+    ctx.keyColor = this.index
   }
 }
 
 /************************************************
-*
 * LOAD_CLUT_LOW
-*
 ************************************************/
-class CDGLoadCLUTLowInstruction extends CDGInstruction {
-  constructor (bytes, offset) {
-    super(bytes, offset)
-
-    const doff = offset + CDG_DATA
+class CDGLoadCLUTLowInstruction {
+  constructor (bytes) {
     this.colors = Array(8)
 
     for (let i = 0; i < 8; i++) {
-      const cur = doff + 2 * i
+      const cur = CDG_DATA + 2 * i
 
       let color = (bytes[cur] & 0x3F) << 6
       color += bytes[cur + 1] & 0x3F
@@ -377,9 +296,9 @@ class CDGLoadCLUTLowInstruction extends CDGInstruction {
     }
   }
 
-  execute (context) {
+  execute (ctx) {
     for (let i = 0; i < 8; i++) {
-      context.setCLUTEntry(i + this.clutOffset,
+      ctx.setCLUTEntry(i + this.clutOffset,
         this.colors[i][0],
         this.colors[i][1],
         this.colors[i][2])
@@ -390,147 +309,118 @@ class CDGLoadCLUTLowInstruction extends CDGInstruction {
 }
 
 /************************************************
-*
 * LOAD_CLUT_HI
-*
 ************************************************/
 class CDGLoadCLUTHighInstruction extends CDGLoadCLUTLowInstruction {
   get clutOffset () { return 8 }
 }
 
 /************************************************
-*
 * CDGParser
-*
 ************************************************/
 class CDGParser {
-  static parseOne (bytes, offset) {
-    const command = bytes[offset] & this.COMMAND_MASK
-
-    /* if this packet is a cdg command */
-    if (command === this.CDG_COMMAND) {
-      const opcode = bytes[offset + 1] & this.COMMAND_MASK
-      const InstructionType = this.BY_TYPE[opcode]
-
-      if (typeof (InstructionType) !== 'undefined') {
-        return new InstructionType(bytes, offset)
-      } else {
-        console.log(`Unknown CDG instruction (instruction = ${opcode})`)
-        return new CDGNoopInstruction()
-      }
-    }
-
-    return new CDGNoopInstruction()
-  }
-}
-
-CDGParser.COMMAND_MASK = 0x3F
-CDGParser.CDG_COMMAND = 0x9
-
-CDGParser.BY_TYPE = {}
-CDGParser.BY_TYPE[CDG_MEMORY_PRESET] = CDGMemoryPresetInstruction
-CDGParser.BY_TYPE[CDG_BORDER_PRESET] = CDGBorderPresetInstruction
-CDGParser.BY_TYPE[CDG_TILE_BLOCK] = CDGTileBlockInstruction
-CDGParser.BY_TYPE[CDG_SCROLL_PRESET] = CDGScrollPresetInstruction
-CDGParser.BY_TYPE[CDG_SCROLL_COPY] = CDGScrollCopyInstruction
-CDGParser.BY_TYPE[CDG_SET_KEY_COLOR] = CDGSetKeyColorInstruction
-CDGParser.BY_TYPE[CDG_LOAD_CLUT_LOW] = CDGLoadCLUTLowInstruction
-CDGParser.BY_TYPE[CDG_LOAD_CLUT_HI] = CDGLoadCLUTHighInstruction
-CDGParser.BY_TYPE[CDG_TILE_BLOCK_XOR] = CDGTileBlockXORInstruction
-
-/************************************************
-*
-* CDGPlayer
-*
-************************************************/
-class CDGPlayer {
-  constructor (canvas, opts = {}) {
-    if (!(canvas instanceof HTMLCanvasElement)) {
-      throw new Error('Must be instantiated with an HTMLCanvasElement')
-    }
-
-    this.canvas = canvas
-    this.ctx = new CDGContext(this.canvas)
-    this.setOptions(opts)
-  }
-
-  init () {
-    this.instructions = []
-    this.lastBackground = null
-    this.isDirty = false
+  constructor (buffer) {
+    this.bytes = new Uint8Array(buffer)
+    this.numPackets = buffer.byteLength / PACKET_SIZE
     this.pc = -1
   }
 
-  load (bytes) {
-    this.init()
-
-    for (let offset = 0; offset < bytes.length; offset += PACKET_SIZE) {
-      const instruction = CDGParser.parseOne(bytes, offset)
-      if (instruction != null) this.instructions.push(instruction)
-    }
-  }
-
-  render (curTime) {
-    if (typeof curTime === 'undefined') {
-      this.ctx.paint()
-      return
-    } else if (isNaN(curTime) || curTime < 0) throw new Error(`Invalid time: ${curTime}`)
-
+  parseThrough (sec) {
     // determine packet we should be at, based on spec
     // of 4 packets per sector @ 75 sectors per second
-    const newPc = Math.floor(4 * 75 * curTime)
+    const newPc = Math.floor(4 * 75 * sec)
+    const instructions = []
 
-    if (this.pc === newPc) {
-      // already rendered this but we'll try to help out and re-paint
-      this.ctx.paint()
-      return
-    } else if (this.pc > newPc) {
+    if (this.pc > newPc) {
       // rewind kindly
       this.pc = -1
+      instructions.isRestarting = true
+    }
+
+    while (this.pc < newPc && this.pc < this.numPackets) {
+      this.pc++
+      const offset = this.pc * PACKET_SIZE
+      const cmd = this.parse(this.bytes.slice(offset, offset + PACKET_SIZE))
+
+      // ignore no-ops
+      if (cmd) instructions.push(cmd)
+    }
+
+    return instructions
+  }
+
+  parse (packet) {
+    if ((packet[0] & this.COMMAND_MASK) === this.CDG_COMMAND) {
+      const opcode = packet[1] & this.COMMAND_MASK
+      const InstructionType = this.BY_TYPE[opcode]
+
+      if (typeof (InstructionType) !== 'undefined') {
+        return new InstructionType(packet)
+      } else {
+        console.log(`Unknown CDG instruction (instruction = ${opcode})`)
+        return false // no-op
+      }
+    }
+
+    return false // no-op
+  }
+}
+
+CDGParser.prototype.COMMAND_MASK = 0x3F
+CDGParser.prototype.CDG_COMMAND = 0x9
+CDGParser.prototype.BY_TYPE = {
+  [CDG_MEMORY_PRESET]: CDGMemoryPresetInstruction,
+  [CDG_BORDER_PRESET]: CDGBorderPresetInstruction,
+  [CDG_TILE_BLOCK]: CDGTileBlockInstruction,
+  [CDG_SCROLL_PRESET]: CDGScrollPresetInstruction,
+  [CDG_SCROLL_COPY]: CDGScrollCopyInstruction,
+  [CDG_SET_KEY_COLOR]: CDGSetKeyColorInstruction,
+  [CDG_LOAD_CLUT_LOW]: CDGLoadCLUTLowInstruction,
+  [CDG_LOAD_CLUT_HI]: CDGLoadCLUTHighInstruction,
+  [CDG_TILE_BLOCK_XOR]: CDGTileBlockXORInstruction
+}
+
+/************************************************
+* CDGPlayer
+************************************************/
+class CDGPlayer {
+  constructor () {
+    this.ctx = new CDGContext()
+  }
+
+  load (buffer) {
+    if (!(buffer instanceof ArrayBuffer)) throw new Error('load() expects an ArrayBuffer')
+
+    this.forceKey = null
+    this.parser = new CDGParser(buffer)
+  }
+
+  render (time, opts = {}) {
+    if (!this.parser) throw new Error('load() must be called before render()')
+    if (isNaN(time) || time < 0) throw new Error(`Invalid time: ${time}`)
+
+    const instructions = this.parser.parseThrough(time)
+    const isChanged = !!instructions.length || !!instructions.isRestarting || opts.forceKey !== this.forceKey
+    this.forceKey = opts.forceKey // cache last value so we re-render if it changes
+
+    if (instructions.isRestarting) {
       this.ctx.init()
     }
 
-    // update CDG state
-    while (this.pc < newPc && this.pc < this.instructions.length - 1) {
-      this.pc += 1
-
-      // set dirty flag if work was performed (and flag isn't already set)
-      if (this.instructions[this.pc].execute(this.ctx) !== false && !this.isDirty) {
-        this.isDirty = true
-      }
+    for (const i of instructions) {
+      i.execute(this.ctx)
     }
 
-    if (this.isDirty) {
-      this.ctx.renderFrame()
-      this.isDirty = false
+    if (isChanged) {
+      this.ctx.renderFrame(opts)
     }
 
-    if (this.onBackgroundChange) {
-      const cur = this.ctx.backgroundRGBA
-      const last = this.lastBackground
-
-      if (cur && !(last && cur.every((val, i) => val === last[i]))) {
-        this.lastBackground = cur
-        this.onBackgroundChange(cur)
-      }
+    return {
+      imageData: this.ctx.imageData,
+      isChanged,
+      backgroundRGBA: this.ctx.backgroundRGBA,
+      contentBounds: this.ctx.contentBounds,
     }
-  }
-
-  setOptions ({
-    forceKey = this.ctx.forceKey || false,
-    onBackgroundChange = this.onBackgroundChange || undefined,
-    shadowBlur = this.ctx.shadowBlur || 0,
-    shadowColor = this.ctx.shadowColor || 'rgba(0,0,0,1)',
-    shadowOffsetX = this.ctx.shadowOffsetX || 0,
-    shadowOffsetY = this.ctx.shadowOffsetY || 0
-  } = {}) {
-    if (onBackgroundChange && typeof onBackgroundChange !== 'function') {
-      throw new Error('"onBackgroundChange" option must be a function')
-    }
-
-    this.onBackgroundChange = onBackgroundChange
-    Object.assign(this.ctx, { forceKey, shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY })
-    this.ctx.renderFrame()
   }
 }
 

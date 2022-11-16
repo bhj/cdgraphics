@@ -7,7 +7,7 @@
     "url": "https://github.com/bhj/cdgraphics.git"
   },
   "scripts": {
-    "demo": "webpack serve --static demo",
+    "demo": "webpack serve --static demo --open",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "test": "echo \"Error: no test specified\" && exit 1"

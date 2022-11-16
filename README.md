@@ -92,7 +92,6 @@ To run the demo and see how it all comes together:
 3. Update lines 1 and 2 of `demo/demo.js` with those filenames
 4. `$ npm i`
 5. `$ npm run demo`
-6. Browse to `http://localhost:8080` (the demo is served by webpack-dev-server)
 
 ## Acknowledgements
 

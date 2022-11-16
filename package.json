@@ -7,7 +7,7 @@
     "url": "https://github.com/bhj/cdgraphics.git"
   },
   "scripts": {
-    "demo": "webpack serve --content-base demo",
+    "demo": "webpack serve --static demo",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,15 +23,14 @@
   ],
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^7.20.0",
-    "eslint-config-standard": "^16.0.2",
+    "eslint": "^8.27.0",
+    "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.3.1",
-    "exports-loader": "^2.0.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "exports-loader": "^4.0.0",
     "webpack": "^5.23.0",
     "webpack-cli": "^4.5.0",
-    "webpack-dev-server": "^3.11.2"
-  },
-  "dependencies": {}
+    "webpack-dev-server": "^4.11.1"
+  }
 }

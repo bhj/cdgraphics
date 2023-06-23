@@ -31,8 +31,8 @@ class CDGContext {
     this.hOffset = 0
     this.vOffset = 0
     this.keyColor = null // clut index
-    this.bgColor = null // clut index
-    this.borderColor = null // clut index
+    this.bgColor = 0 // clut index
+    this.borderColor = 0 // clut index
     this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
     this.pixels = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
     this.buffer = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)

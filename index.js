@@ -54,8 +54,8 @@ class CDGContext {
     for (let y = top; y < bottom; y++) {
       for (let x = left; x < right; x++) {
         // Respect the horizontal and vertical offsets for grabbing the pixel color
-        const px = ((x - this.hOffset) + this.WIDTH) % this.WIDTH
-        const py = ((y - this.vOffset) + this.HEIGHT) % this.HEIGHT
+        const px = ((x + this.hOffset) + this.WIDTH) % this.WIDTH
+        const py = ((y + this.vOffset) + this.HEIGHT) % this.HEIGHT
         const pixelIndex = px + (py * this.WIDTH)
         const colorIndex = this.pixels[pixelIndex]
         const [r, g, b] = this.clut[colorIndex]
@@ -203,7 +203,7 @@ class CDGScrollPresetInstruction {
 
     const vScroll = bytes[CDG_DATA + 2] & 0x3F
     this.vCmd = (vScroll & 0x30) >> 4
-    this.vOffset = (vScroll & 0x07)
+    this.vOffset = (vScroll & 0x0f)
   }
 
   execute (ctx) {

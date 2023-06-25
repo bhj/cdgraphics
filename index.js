@@ -60,8 +60,8 @@ class CDGContext {
           colorIndex = this.borderColor
         } else {
           // Respect the horizontal and vertical offsets for grabbing the pixel color
-          const px = ((x + this.hOffset) + this.WIDTH) % this.WIDTH
-          const py = ((y + this.vOffset) + this.HEIGHT) % this.HEIGHT
+          const px = x + this.hOffset
+          const py = y + this.vOffset
           const pixelIndex = px + (py * this.WIDTH)
           colorIndex = this.pixels[pixelIndex]
         }

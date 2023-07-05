@@ -32,6 +32,7 @@ class CDGContext {
     this.vOffset = 0
     this.keyColor = null // clut index
     this.bgColor = null // clut index
+    this.borderColor = null // clut index
     this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
     this.pixels = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
     this.buffer = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
@@ -53,11 +54,23 @@ class CDGContext {
 
     for (let y = top; y < bottom; y++) {
       for (let x = left; x < right; x++) {
-        // Respect the horizontal and vertical offsets for grabbing the pixel color
-        const px = ((x - this.hOffset) + this.WIDTH) % this.WIDTH
-        const py = ((y - this.vOffset) + this.HEIGHT) % this.HEIGHT
-        const pixelIndex = px + (py * this.WIDTH)
-        const colorIndex = this.pixels[pixelIndex]
+        let colorIndex
+
+        if (this.borderColor !== null && (
+          x < this.DISPLAY_BOUNDS[0] ||
+          y < this.DISPLAY_BOUNDS[1] ||
+          x >= this.DISPLAY_BOUNDS[2] ||
+          y >= this.DISPLAY_BOUNDS[3])
+        ) {
+          colorIndex = this.borderColor
+        } else {
+          // Respect the horizontal and vertical offsets for grabbing the pixel color
+          const px = x + this.hOffset
+          const py = y + this.vOffset
+          const pixelIndex = px + (py * this.WIDTH)
+          colorIndex = this.pixels[pixelIndex]
+        }
+
         const [r, g, b] = this.clut[colorIndex]
         const isKeyColor = colorIndex === this.keyColor ||
           (forceKey && (colorIndex === this.bgColor || this.bgColor == null))
@@ -112,6 +125,7 @@ class CDGMemoryPresetInstruction {
   execute (ctx) {
     ctx.pixels.fill(this.color)
     ctx.bgColor = this.color
+    ctx.borderColor = null
   }
 }
 
@@ -123,24 +137,8 @@ class CDGBorderPresetInstruction {
     this.color = bytes[CDG_DATA] & 0x0F
   }
 
-  execute ({ DISPLAY_BOUNDS, WIDTH, pixels, HEIGHT }) {
-    const b = DISPLAY_BOUNDS
-    for (let x = 0; x < WIDTH; x++) {
-      for (let y = 0; y < b[1]; y++) {
-        pixels[x + y * WIDTH] = this.color
-      }
-      for (let y = b[3] + 1; y < HEIGHT; y++) {
-        pixels[x + y * WIDTH] = this.color
-      }
-    }
-    for (let y = b[1]; y <= b[3]; y++) {
-      for (let x = 0; x < b[0]; x++) {
-        pixels[x + y * WIDTH] = this.color
-      }
-      for (let x = b[2] + 1; x < WIDTH; x++) {
-        pixels[x + y * WIDTH] = this.color
-      }
-    }
+  execute (ctx) {
+    ctx.borderColor = this.color
   }
 }
 
@@ -203,7 +201,7 @@ class CDGScrollPresetInstruction {
 
     const vScroll = bytes[CDG_DATA + 2] & 0x3F
     this.vCmd = (vScroll & 0x30) >> 4
-    this.vOffset = (vScroll & 0x07)
+    this.vOffset = (vScroll & 0x0f)
   }
 
   execute (ctx) {

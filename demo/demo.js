@@ -51,11 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // for demo UI only
   const forceKeyCheckbox = document.getElementById('forceKey')
   const showContentBoundsCheckbox = document.getElementById('showContentBounds')
-  
+
   const showContentBounds = ((scale) => (contentBounds) => {
     const [x1, y1, x2, y2] = contentBounds
-
-    ctx.strokeStyle = "green"
+    ctx.strokeStyle = 'green'
     ctx.strokeRect(x1 * scale, y1 * scale, (x2 - x1) * scale, (y2 - y1) * scale)
   })(canvas.clientWidth / 300)
 })

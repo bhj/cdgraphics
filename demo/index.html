@@ -10,6 +10,8 @@
       #audio { display: block; }
       fieldset { background: #f5f5f5; margin-top: .5rem; padding: 1rem; max-width: 600px; }
       fieldset legend label { font-weight: bold; }
+      fieldset input,
+      fieldset > label { cursor: pointer; }
     </style>
   </head>
   <body>
@@ -20,14 +22,14 @@
         <legend><label>Options</label></legend>
         <label>
           <input type="checkbox" id="forceKey" value="1" />
-          forceKey
+          forceKey (background transparency)
         </label>
       </fieldset>
       <fieldset>
         <legend><label>Debug</label></legend>
         <label>
           <input type="checkbox" id="showContentBounds" value="1" />
-          Show content bounds (use with forceKey enabled)
+          Show content bounds (green outline; use with forceKey enabled)
         </label>
       </fieldset>
     </div>

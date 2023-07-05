@@ -20,7 +20,7 @@ const PACKET_SIZE = 24
 
 /************************************************
 * CDGContext represents a specific state of
-* the screen, clut and other CDG variables.
+* the screen, color LUT and other CDG variables.
 ************************************************/
 class CDGContext {
   constructor () {
@@ -30,10 +30,10 @@ class CDGContext {
   init () {
     this.hOffset = 0
     this.vOffset = 0
-    this.keyColor = null // clut index
-    this.bgColor = null // clut index
-    this.borderColor = null // clut index
-    this.clut = new Array(16).fill([0, 0, 0]) // color lookup table
+    this.keyColor = null // color LUT index
+    this.bgColor = null // color LUT index
+    this.borderColor = null // color LUT index
+    this.clut = new Array(16).fill([0, 0, 0]) // color LUT
     this.pixels = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
     this.buffer = new Uint8ClampedArray(this.WIDTH * this.HEIGHT).fill(0)
     this.imageData = new ImageData(this.WIDTH, this.HEIGHT)

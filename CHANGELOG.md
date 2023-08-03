@@ -1,4 +1,14 @@
-## v6.0.0 (February 19, 2021)
+## v6.0.1 (2023-08-02)
+
+**Fixed:**
+
+- Rendering issues when scrolling vertically and/or drawing inside the border area prior to scrolling (thanks [hcs64](https://github.com/bhj/cdgraphics/pull/22))
+
+**Improved:**
+
+- Added a "Show content bounds" option to the demo that draws a green rectangle indicating the reported `contentBounds` coordinates for each frame
+
+## v6.0.0 (2021-02-19)
 
 v6 is a **major change** making the library significantly smaller and more flexible. Please see the README for updated example usage.
 
@@ -11,13 +21,13 @@ v6 is a **major change** making the library significantly smaller and more flexi
 - Instructions are now processed JIT, significantly reducing `load()` time
 - Added `contentBounds` metadata describing a bounding box that fits the rendered frame's non-transparent content
 
-## v5.0.0 (July 23, 2020)
+## v5.0.0 (2020-07-23)
 
 **Breaking changes/migrating from 4.x:**
 
 v5 has a new, simple API. Instead of `play()`, `pause()` and `syncTime()`, you now control the [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) loop and `render()` a frame at the [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime). This also enables full rewind/random seek support. See the README for more on using `render()`.
 
-## v4.0.0 (June 23, 2020)
+## v4.0.0 (2020-06-23)
 
 **Breaking changes/migrating from 3.x:**
 - The `forceTransparent` option has been renamed `forceKey`. Subsequently, the `forceTransparent()` method has been removed, and `forceKey` can be set with the new `setOptions()` method.
@@ -26,7 +36,7 @@ v5 has a new, simple API. Instead of `play()`, `pause()` and `syncTime()`, you n
 - Added shadow effects support
 - Significantly reduced CPU usage during idle frames
 
-## v3.0.0 (June 18, 2020)
+## v3.0.0 (2020-06-18)
 
 **Breaking changes/migrating from 2.x:**
 - Internet Explorer, Chrome < v30, and Firefox < v51 are no longer officially supported (removed vendor prefixes for [`imageSmoothingEnabled`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/imageSmoothingEnabled))
@@ -37,26 +47,26 @@ v5 has a new, simple API. Instead of `play()`, `pause()` and `syncTime()`, you n
 - Graphics now scale fluidly with the canvas instead of at fixed increments
 - Canvas no longer temporarily appears blurry while resizing
 
-## v2.0.1 (Nov 11, 2018)
+## v2.0.1 (2018-11-11)
 
 - Improved documentation
 
-## v2.0.0 (Nov 11, 2018)
+## v2.0.0 (2018-11-11)
 
 - **BREAKING:** Requires ES2015 (or later) environment
 - Major performance improvements from offscreen canvas rendering
 - Added experimental forceTransparent option and callback for background color changes
 
-## v1.0.2 (Apr 4, 2018)
+## v1.0.2 (2018-04-04)
 
 - Fix playback when `play()` is called before `load()` when already at end
 
-## v1.0.1 (Jan 21, 2018)
+## v1.0.1 (2018-01-21)
 
 - Fix potential rendering errors by resetting canvas context on each load
 - Fix playback failing to start when `play()` was called before `load()`
 - Throw error if not instantiated with a valid canvas element
 
-## v1.0.0 (Sep 10, 2017)
+## v1.0.0 (2017-09-10)
 
 - Initial release

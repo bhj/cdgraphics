@@ -422,4 +422,4 @@ class CDGPlayer {
   }
 }
 
-module.exports = CDGPlayer
+export default CDGPlayer

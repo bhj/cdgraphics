@@ -1,7 +1,7 @@
+import CDGraphics from '../index.js'
+
 const audioUrl = 'YOUR_MP3_FILE.mp3'
 const cdgUrl = 'YOUR_CDG_FILE.cdg'
-
-const CDGraphics = require('../index.js')
 const cdg = new CDGraphics()
 
 document.addEventListener('DOMContentLoaded', () => {

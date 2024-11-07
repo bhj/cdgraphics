@@ -1,10 +1,10 @@
-const path = require('path')
+import path from 'path'
 
-module.exports = {
+export default {
   mode: 'development',
-  entry: path.join(__dirname, 'demo', 'demo.js'),
+  entry: path.join(import.meta.dirname, 'demo', 'demo.js'),
   output: {
-    path: path.join(__dirname, 'demo'),
+    path: path.join(import.meta.dirname, 'demo'),
     filename: 'bundle.js'
   },
   plugins: [

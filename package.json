@@ -2,6 +2,7 @@
   "name": "cdgraphics",
   "version": "0.0.0-dev.0",
   "description": "A fast, flexible CD+Graphics (CD+G) renderer",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/bhj/cdgraphics.git"

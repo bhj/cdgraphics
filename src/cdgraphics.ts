@@ -141,6 +141,8 @@ class CDGMemoryPresetInstruction {
     ctx.pixels.fill(this.color)
     ctx.bgColor = this.color
     ctx.borderColor = null
+    ctx.hOffset = 0
+    ctx.vOffset = 0
   }
 }
 

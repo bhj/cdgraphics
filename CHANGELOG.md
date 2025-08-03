@@ -10,6 +10,10 @@
 - Added TypeScript declarations
 - Moved the build system from Webpack to Vite; to run the demo you can now `npm run dev`
 
+**Fixed:**
+
+- Rendering issue with titles that finish scrolling at non-zero offsets (thanks [hcs64](https://github.com/bhj/cdgraphics/issues/32))
+
 ## v6.0.1 (2023-08-02)
 
 **Fixed:**

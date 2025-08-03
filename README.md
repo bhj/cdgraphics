@@ -31,7 +31,7 @@ fetch(cdgFileUrl)
   })
 ```
 
-### `.render(time, [options])`
+### `.render(time: number, options?: RenderOptions): Frame`
 
 Renders the frame at the given time index.
 

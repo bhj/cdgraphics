@@ -1,3 +1,15 @@
+## v7.0 (TBD)
+
+**Breaking changes:**
+
+- The package is now in ECMAScript Module (ESM) format
+- The `load()` method has been removed in favor of simply passing your file's ArrayBuffer to the constructor
+
+**Improved:**
+
+- Added TypeScript declarations
+- Moved the build system from Webpack to Vite; to run the demo you can now `npm run dev`
+
 ## v6.0.1 (2023-08-02)
 
 **Fixed:**

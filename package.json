@@ -2,16 +2,23 @@
   "name": "cdgraphics",
   "version": "0.0.0-dev.0",
   "description": "A fast, flexible CD+Graphics (CD+G) renderer",
+  "license": "ISC",
   "type": "module",
+  "exports": "./dist/cdgraphics.js",
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/bhj/cdgraphics.git"
   },
   "scripts": {
-    "demo": "webpack serve --static demo --open",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "tsc && vite build"
   },
   "keywords": [
     "canvas",
@@ -22,13 +29,13 @@
     "music",
     "karaoke"
   ],
-  "license": "ISC",
   "devDependencies": {
-    "eslint": "^8.57.1",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.31.0",
-    "webpack": "^5.96.1",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.1.0"
+    "@microsoft/api-extractor": "^7.52.10",
+    "@stylistic/eslint-plugin": "^5.2.2",
+    "eslint": "^9.32.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0",
+    "unplugin-dts": "^1.0.0-beta.6",
+    "vite": "^7.0.4"
   }
 }

@@ -1,8 +1,8 @@
-import CDGraphics from '../index.js'
+import CDGraphics from './cdgraphics.js'
 
 const audioUrl = 'YOUR_MP3_FILE.mp3'
 const cdgUrl = 'YOUR_CDG_FILE.cdg'
-const cdg = new CDGraphics()
+let cdg
 
 document.addEventListener('DOMContentLoaded', () => {
   const audio = document.getElementById('audio')
@@ -10,12 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const ctx = canvas.getContext('2d')
   let frameId
 
-  const doRender = time => {
+  const doRender = (time) => {
     const frame = cdg.render(time, { forceKey: forceKeyCheckbox.checked })
     if (!frame.isChanged) return
 
     createImageBitmap(frame.imageData)
-      .then(bitmap => {
+      .then((bitmap) => {
         ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight)
         ctx.imageSmoothingEnabled = false
         ctx.drawImage(bitmap, 0, 0, canvas.clientWidth, canvas.clientHeight)
@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // download and load cdg file
   fetch(cdgUrl)
     .then(response => response.arrayBuffer())
-    .then(buffer => {
-      cdg.load(buffer)
+    .then((buffer) => {
+      cdg = new CDGraphics(buffer)
       audio.src = audioUrl // pre-load audio
     })
 
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const forceKeyCheckbox = document.getElementById('forceKey')
   const showContentBoundsCheckbox = document.getElementById('showContentBounds')
 
-  const showContentBounds = ((scale) => (contentBounds) => {
+  const showContentBounds = (scale => (contentBounds) => {
     const [x1, y1, x2, y2] = contentBounds
     ctx.strokeStyle = 'green'
     ctx.strokeRect(x1 * scale, y1 * scale, (x2 - x1) * scale, (y2 - y1) * scale)

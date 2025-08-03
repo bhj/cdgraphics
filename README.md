@@ -10,34 +10,32 @@ A fast, flexible [CD+Graphics (CD+G)](https://en.wikipedia.org/wiki/CD%2BG) rend
 * No dependencies
 
 ## Installation
-```
-$ npm i cdgraphics
+```bash
+npm i cdgraphics
 ```
 
 ## API
 
-### `new CDGraphics()`
+### `new CDGraphics(buffer: ArrayBuffer)`
 
-Instantiates a new parser/renderer.
+Instantiates a new renderer with the given CD+G file data. The data must be an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), which can be had via the [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) of a [fetch()](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 
 ```js
 import CDGraphics from 'cdgraphics'
-const cdg = new CDGraphics()
-```
+let cdg
 
-### `.load(buffer)`
-
-Loads a CD+G file from an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), which can be had via the [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) of a [fetch()](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API). You must `load()` a CD+G file before calling `render()`.
-
-```js
 fetch(cdgFileUrl)
   .then(response => response.arrayBuffer())
-  .then(buffer => cdg.load(buffer))
+  .then(buffer => {
+    cdg = new CDGraphics(buffer)
+  })
 ```
 
 ### `.render(time, [options])`
 
-- `time`: Number (in seconds) of the frame to render. Should usually be the [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime) of an `<audio>` element.
+Renders the frame at the given time index.
+
+- `time`: Number (in fractional seconds) of the frame to render. Should usually be the [currentTime](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio#attr-currentTime) from an `<audio>` element.
 - `options`: Object with one or more of the following:
   - `forceKey`: Boolean forcing the background to be transparent, even if the CD+G title did not explicitly specify it. Defaults to `false`.
 
@@ -50,7 +48,7 @@ Returns an object with the following properties:
 
 ## Usage
 
-The following excerpt demonstrates an audio-synced render loop that draws to a canvas. See [the demo code](https://github.com/bhj/cdgraphics/blob/master/demo/demo.js) for a more complete example.
+The following excerpt demonstrates an audio-synced render loop that draws to a canvas. See [the demo code](https://github.com/bhj/cdgraphics/blob/master/src/demo.js) for a more complete example.
 
  ```js
 const audio = document.getElementById('audio')
@@ -83,15 +81,15 @@ audio.addEventListener('ended', pause)
 audio.addEventListener('seeked', () => doRender(audio.currentTime))
  ```
 
-## Demo
+## Demo & Development
 
 To run the demo and see how it all comes together:
 
 1. Clone the repo
-2. Place your audio and .cdg file in the `demo` folder
-3. Update lines 1 and 2 of `demo/demo.js` with those filenames
+2. Place your audio and .cdg file in the `public` folder
+3. Update lines 1 and 2 of `src/demo.js` with those filenames
 4. `$ npm i`
-5. `$ npm run demo`
+5. `$ npm run dev`
 
 ## Acknowledgements
 

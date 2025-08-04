@@ -494,8 +494,9 @@ export default class CDGraphics {
     this.parser = new CDGParser(buffer)
   }
 
+  /** Renders the frame at the given time index. */
   render (
-    /** Time index (in fractional seconds) of the frame to render. Should usually be the `currentTime` from an `audio` element. */
+    /** Time index (in fractional seconds) to render. Should usually be the `currentTime` from an `audio` element. */
     time: number,
     opts: RenderOptions = {},
   ): Frame {

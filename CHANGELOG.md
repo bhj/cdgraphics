@@ -1,4 +1,4 @@
-## v7.0 (TBD)
+## v7.0.0 (2025-08-04)
 
 **Breaking changes:**
 
@@ -7,8 +7,8 @@
 
 **Improved:**
 
-- Added TypeScript declarations
-- Moved the build system from Webpack to Vite; to run the demo you can now `npm run dev`
+- Moved to TypeScript
+- Moved build system to Vite; to run the demo you can now `npm run dev`
 
 **Fixed:**
 
